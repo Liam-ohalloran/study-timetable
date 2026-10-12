@@ -11,3 +11,6 @@ Live at: https://liam-ohalloran.github.io/study-timetable/
 Subjects: `eng hbio spec meth chem rel`. Other: `school shift exam tutor sport event cut`.
 
 The study timer saves on each device. Editing `schedule.js` never touches your logged times.
+
+## Sync between phone and laptop
+Tap **Sign in to sync** (top right) and use your Pay Tracker email and password. Do it once on each device. Timer sessions, tap-edits and ticked to-dos then stay in sync (checked every 20 seconds and whenever you open the app).

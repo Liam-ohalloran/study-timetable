@@ -74,6 +74,16 @@ h1{font-family:var(--display);font-size:clamp(26px,4vw,36px);font-weight:700;let
 .b.short .d::before{content:" · "}
 .b.short{white-space:nowrap;text-overflow:ellipsis}
 .col{cursor:copy}
+.hdr-right{display:flex;flex-direction:column;align-items:flex-end;gap:10px}
+.syncpill{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--surface);color:var(--fg);font:500 12.5px var(--body);border-radius:999px;padding:6px 12px;cursor:pointer}
+.syncpill .sdot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.syncpill[data-state="ok"] .sdot{background:var(--hbio)}
+.syncpill[data-state="busy"] .sdot{background:var(--meth)}
+.syncpill[data-state="err"] .sdot{background:var(--spec)}
+.syncpill[data-state="off"]{color:var(--accent);border-color:var(--accent)}
+.sheet input[type=email],.sheet input[type=password]{font:16px var(--body);color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:100%}
+@media (max-width:560px){.hdr-right{align-items:flex-start}}
+
 .todayhead{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px}
 .tdate{font:700 22px var(--display)}
 .tdue{color:var(--spec);font-weight:600;font-size:13px;margin-top:2px}
@@ -206,7 +216,7 @@ h1{font-family:var(--display);font-size:clamp(26px,4vw,36px);font-weight:700;let
       <h1>Sem 2 Study Timetable</h1>
       <p class="sub">Hour by hour from now to your last exam. Coloured blocks are study, striped blocks marked CRAM are last-minute review, dashed blocks are things worth cutting.</p>
     </div>
-    <div class="countdown" id="countdown"></div>
+    <div class="hdr-right"><button class="syncpill" id="syncBtn" type="button"><span class="sdot"></span><span id="syncTxt">Sign in to sync</span></button><div class="countdown" id="countdown"></div></div>
   </header>
 
   <div class="views" role="tablist" aria-label="Views">
@@ -238,7 +248,7 @@ h1{font-family:var(--display);font-size:clamp(26px,4vw,36px);font-weight:700;let
       <h2>Recent sessions</h2>
       <ul id="log" class="log"></ul>
     </div>
-    <p class="notes">Tap a subject to start its timer, tap it again to pause. Tapping a different subject switches over. The timer keeps running if you close the page. Times are saved on this device only.</p>
+    <p class="notes">Tap a subject to start its timer, tap it again to pause. Tapping a different subject switches over. The timer keeps running if you close the page. Sign in at the top to keep your times in sync on your phone and laptop.</p>
   </section>
 
   <section id="plan" class="plan">
@@ -249,10 +259,11 @@ h1{font-family:var(--display);font-size:clamp(26px,4vw,36px);font-weight:700;let
   <div class="scroller"><div class="grid" id="grid"></div></div>
 
   <div class="legend" id="legend"></div>
-  <p class="notes">Shifts are only rostered to Sun 18 Oct. If you pick one up later, swap it in and drop that day to about 2 hours. School is shown as 8:30 to 3:15. Tap any block to edit or delete it, hold a block to drag it to a new time or day, or tap an empty spot to add one. Your edits save on this device. Dates come from TickTick and the Y11 Sem 2 exam timetable. No classes are shown during the exam fortnight.</p>
+  <p class="notes">Shifts are only rostered to Sun 18 Oct. If you pick one up later, swap it in and drop that day to about 2 hours. School is shown as 8:30 to 3:15. Tap any block to edit or delete it, hold a block to drag it to a new time or day, or tap an empty spot to add one. Sign in (top right) to sync your timer, edits and to-dos between devices. Dates come from TickTick and the Y11 Sem 2 exam timetable. No classes are shown during the exam fortnight.</p>
   </section>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="schedule.js"></script>
 <script>
 const START=6, END=24, HOUR=46;
@@ -285,14 +296,20 @@ WEEKS.forEach(w=>w.orig=w.days.map(day=>day.map(b=>[...b])));
 
 /* edits made by tapping blocks: saved on this device, layered over schedule.js */
 const EKEY="scheduleEdits.v1";
+/* sync bookkeeping: when each piece last changed on this device, so the newest change wins between devices */
+const MKEY="studySyncMeta.v1";
+let META={editTs:{},doneTs:{},runTs:0,deleted:[]};
+try{META=Object.assign(META,JSON.parse(localStorage.getItem(MKEY)||"{}"))}catch(e){}
+const saveMeta=()=>{try{localStorage.setItem(MKEY,JSON.stringify(META))}catch(e){}};
 let EDITS={};try{EDITS=JSON.parse(localStorage.getItem(EKEY)||"{}")}catch(e){}
 const ekey=(w,d)=>w.start+"|"+d;
 function applyEdits(){WEEKS.forEach(w=>{w.days=w.orig.map((day,d)=>(EDITS[ekey(w,d)]||day).map(b=>[...b]))})}
 function saveDay(w,d){
   EDITS[ekey(w,d)]=w.days[d].slice().sort((a,b)=>toHr(a[0])-toHr(b[0]));
   try{localStorage.setItem(EKEY,JSON.stringify(EDITS))}catch(e){}
+  META.editTs[ekey(w,d)]=Date.now();saveMeta();queuePush();
 }
-function resetDay(w,d){delete EDITS[ekey(w,d)];try{localStorage.setItem(EKEY,JSON.stringify(EDITS))}catch(e){}}
+function resetDay(w,d){delete EDITS[ekey(w,d)];try{localStorage.setItem(EKEY,JSON.stringify(EDITS))}catch(e){}META.editTs[ekey(w,d)]=Date.now();saveMeta();queuePush()}
 const toHr=s=>{const[h,m]=s.split(":").map(Number);return h+m/60};
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 applyEdits();
@@ -440,7 +457,7 @@ function openEditor(d,k,startH){
   const $=id=>document.getElementById(id);
   const sync=()=>{const tt=$("edType").value,st=TYPES[tt].study;$("edDot").style.background=`var(${TYPES[tt].c})`;$("edCramWrap").hidden=!st;$("edDetailLbl").textContent=st?"What you're doing":"Title"};
   sync();$("edType").onchange=sync;
-  setTimeout(()=>$(isNew?"edDetail":"edType").focus(),30);
+  setTimeout(()=>{const f=$(isNew?"edDetail":"edType");f&&f.focus()},30);
   $("edCancel").onclick=closeEditor;
   if($("edReset"))$("edReset").onclick=()=>{resetDay(w,d);applyEdits();closeEditor();show(CUR)};
   if($("edDel"))$("edDel").onclick=ev=>{
@@ -518,7 +535,12 @@ const SUBJ=["eng","hbio","spec","meth","chem"];
 const KEY="studyTracker.v1";
 let st={sessions:[],running:null};
 try{const raw=localStorage.getItem(KEY);if(raw)st=Object.assign(st,JSON.parse(raw))}catch(e){}
-const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(st))}catch(e){}};
+let lastRun=JSON.stringify(st.running||null);
+const save=()=>{
+  const r=JSON.stringify(st.running||null);if(r!==lastRun){META.runTs=Date.now();lastRun=r;saveMeta()}
+  try{localStorage.setItem(KEY,JSON.stringify(st))}catch(e){}
+  queuePush();
+};
 const pads=document.getElementById("pads"),nowEl=document.getElementById("now"),progEl=document.getElementById("progress"),logEl=document.getElementById("log");
 
 const hms=ms=>{const s=Math.floor(ms/1000);return String(Math.floor(s/3600))+":"+String(Math.floor(s%3600/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0")};
@@ -593,6 +615,7 @@ function renderTrack(){
   }).join(""):`<li class="empty">No sessions yet. Tap a subject above to start.</li>`;
   logEl.querySelectorAll(".del").forEach(btn=>btn.onclick=()=>{
     if(!btn.classList.contains("confirm")){btn.classList.add("confirm");btn.textContent="Sure?";setTimeout(()=>{btn.classList.remove("confirm");btn.textContent="Delete"},3000);return}
+    const gone=st.sessions[+btn.dataset.i];if(gone){META.deleted.push(gone.s+"@"+gone.start);saveMeta()}
     st.sessions.splice(+btn.dataset.i,1);save();renderTrack();
   });
 }
@@ -602,7 +625,7 @@ setInterval(()=>{if(!document.getElementById("track").hidden)tick()},1000);
 /* ---------- Today ---------- */
 const DKEY="todayDone.v1";
 let DONE={};try{DONE=JSON.parse(localStorage.getItem(DKEY)||"{}")}catch(e){}
-const saveDone=()=>{try{localStorage.setItem(DKEY,JSON.stringify(DONE))}catch(e){}};
+const saveDone=()=>{try{localStorage.setItem(DKEY,JSON.stringify(DONE))}catch(e){}META.doneTs[todayISO]=Date.now();saveMeta();queuePush()};
 function todayPlan(){
   for(let i=0;i<WEEKS.length;i++){for(let d=0;d<7;d++){if(iso(addDays(WEEKS[i].start,d))===todayISO)return{w:WEEKS[i],d}}}
   return null;
@@ -661,6 +684,93 @@ Object.entries(VIEWS).forEach(([k,id])=>document.getElementById(id).onclick=()=>
 let v0="today";try{v0=localStorage.getItem("studyView")||"today"}catch(e){}
 setView(v0);
 document.addEventListener("visibilitychange",()=>{if(document.hidden)return;if(!document.getElementById("track").hidden)renderTrack();if(!document.getElementById("today").hidden)renderToday()});
+
+/* ---------- sync between devices (Supabase, same login as the Pay Tracker) ---------- */
+const SB_URL="https://framgiajhbugqcxjoqma.supabase.co", SB_KEY="sb_publishable_iGbGSvi36bv0zEmMUcOMjA_U_PdHBv3";
+let sb=null,user=null,pushTimer=null,syncing=false,lastSynced=null,syncErr="";
+try{if(window.supabase)sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true}})}catch(e){sb=null}
+const syncBtn=document.getElementById("syncBtn"),syncTxt=document.getElementById("syncTxt");
+function setSync(state,text){syncBtn.dataset.state=state;syncTxt.textContent=text}
+function syncLabel(){
+  if(!sb)return setSync("off","Sync unavailable here");
+  if(!user)return setSync("off","Sign in to sync");
+  if(syncErr)return setSync("err","Sync failed, tap to retry");
+  if(syncing)return setSync("busy","Syncing…");
+  setSync("ok",lastSynced?"Synced "+new Date(lastSynced).toLocaleTimeString("en-AU",{hour:"numeric",minute:"2-digit"}):"Synced");
+}
+function localBundle(){return{tracker:st,edits:EDITS,done:DONE,meta:META}}
+function mergeRemote(r){
+  if(!r)return;
+  const rm=r.meta||{};
+  const del=new Set([...(META.deleted||[]),...(rm.deleted||[])]);
+  const k=x=>x.s+"@"+x.start,map={};
+  [...st.sessions,...((r.tracker&&r.tracker.sessions)||[])].forEach(x=>{if(x&&!del.has(k(x)))map[k(x)]=x});
+  st.sessions=Object.values(map).sort((a,b)=>a.start-b.start);
+  if((rm.runTs||0)>(META.runTs||0)){st.running=(r.tracker&&r.tracker.running)||null;META.runTs=rm.runTs;lastRun=JSON.stringify(st.running||null)}
+  Object.entries(rm.editTs||{}).forEach(([key,ts])=>{if(ts>(META.editTs[key]||0)){if(r.edits&&r.edits[key])EDITS[key]=r.edits[key];else delete EDITS[key];META.editTs[key]=ts}});
+  Object.entries(rm.doneTs||{}).forEach(([key,ts])=>{if(ts>(META.doneTs[key]||0)){if(r.done&&r.done[key])DONE[key]=r.done[key];else delete DONE[key];META.doneTs[key]=ts}});
+  META.deleted=[...del].slice(-500);
+  try{localStorage.setItem(KEY,JSON.stringify(st));localStorage.setItem(EKEY,JSON.stringify(EDITS));localStorage.setItem(DKEY,JSON.stringify(DONE))}catch(e){}
+  saveMeta();applyEdits();refreshView();
+}
+function refreshView(){
+  if(!document.getElementById("track").hidden)renderTrack();
+  if(!document.getElementById("today").hidden)renderToday();
+  if(!document.getElementById("plan").hidden&&sheet.hidden&&!drag)show(CUR);
+}
+async function syncNow(){
+  if(!sb||!user||syncing)return;
+  syncing=true;syncErr="";syncLabel();
+  try{
+    const {data,error}=await sb.from("study_state").select("data").eq("user_id",user.id).maybeSingle();
+    if(error)throw error;
+    if(data&&data.data)mergeRemote(data.data);
+    const up=await sb.from("study_state").upsert({user_id:user.id,data:localBundle(),updated_at:new Date().toISOString()});
+    if(up.error)throw up.error;
+    lastSynced=Date.now();
+  }catch(e){syncErr=(e&&e.message)||"error";console.warn("Sync failed",e)}
+  syncing=false;syncLabel();
+}
+function queuePush(){if(!sb||!user)return;clearTimeout(pushTimer);pushTimer=setTimeout(syncNow,1200)}
+setInterval(()=>{if(!document.hidden)syncNow()},20000);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)syncNow()});
+window.addEventListener("online",syncNow);
+
+function openAccount(){
+  if(!sb){sheet.innerHTML=`<form><h3>Sync</h3><p class="notes">Sync works on the live site. Open liam-ohalloran.github.io/study-timetable to sign in.</p><div class="acts"><div></div><div><button type="button" class="btn primary" id="acClose">OK</button></div></div></form>`;sheet.hidden=false;document.getElementById("acClose").onclick=closeEditor;return}
+  if(user){
+    if(syncErr){syncNow();return}
+    sheet.innerHTML=`<form><h3>Synced</h3><p class="notes">Signed in as <b>${esc(user.email)}</b>. Your timer, edits and ticked to-dos sync between your phone and laptop.</p>
+      <div class="acts"><div><button type="button" class="btn danger" id="acOut">Sign out</button></div><div><button type="button" class="btn" id="acSync">Sync now</button><button type="button" class="btn primary" id="acClose">Done</button></div></div></form>`;
+    sheet.hidden=false;
+    document.getElementById("acClose").onclick=closeEditor;
+    document.getElementById("acSync").onclick=()=>{closeEditor();syncNow()};
+    document.getElementById("acOut").onclick=async()=>{await sb.auth.signOut();closeEditor()};
+    return;
+  }
+  sheet.innerHTML=`<form id="acForm" novalidate><h3>Sign in to sync</h3>
+    <p class="notes" style="margin:0">Use the same email and password as your Pay Tracker. Sign in once on each device.</p>
+    <label>Email<input type="email" id="acEmail" autocomplete="username" value="liam-oh@outlook.com"></label>
+    <label>Password<input type="password" id="acPass" autocomplete="current-password"></label>
+    <p class="err" id="acErr" hidden></p>
+    <div class="acts"><div></div><div><button type="button" class="btn" id="acCancel">Cancel</button><button type="submit" class="btn primary" id="acGo">Sign in</button></div></div></form>`;
+  sheet.hidden=false;
+  document.getElementById("acCancel").onclick=closeEditor;
+  setTimeout(()=>{const f=document.getElementById("acPass");f&&f.focus()},30);
+  document.getElementById("acForm").onsubmit=async ev=>{
+    ev.preventDefault();
+    const go=document.getElementById("acGo"),err=document.getElementById("acErr");
+    go.disabled=true;go.textContent="Signing in…";err.hidden=true;
+    const {error}=await sb.auth.signInWithPassword({email:document.getElementById("acEmail").value.trim(),password:document.getElementById("acPass").value});
+    if(error){err.textContent=/invalid/i.test(error.message)?"That email or password didn't match. Use your Pay Tracker login.":"Couldn't sign in: "+error.message;err.hidden=false;go.disabled=false;go.textContent="Sign in";return}
+    closeEditor();
+  };
+}
+syncBtn.onclick=openAccount;
+if(sb){
+  sb.auth.onAuthStateChange((_e,session)=>{const was=user&&user.id;user=session?session.user:null;syncLabel();if(user&&user.id!==was)syncNow()});
+  sb.auth.getSession().then(({data})=>{user=data&&data.session?data.session.user:null;syncLabel();if(user)syncNow()}).catch(()=>syncLabel());
+}else syncLabel();
 </script>
 
 </body>
