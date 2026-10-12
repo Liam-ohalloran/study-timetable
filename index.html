@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Study">
+<title>Sem 2 Study Timetable</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: week tabs over a 7-day hour grid (6am to midnight), blocks coloured by his TickTick subject colours */
+:root{
+  --bg:#f3f5f8; --surface:#ffffff; --fg:#14202e; --muted:#5b6878; --line:#dde3ea; --line-soft:#eaeef3;
+  --accent:#1b5e7a; --today:#e6f1f6;
+  --eng:#e0b400; --hbio:#1fb55a; --spec:#ef4b4b; --meth:#f08c1a; --chem:#2f8cf0; --rel:#7a83a8;
+  --school:#cfd6df; --shift:#253446; --exam:#111a24; --tutor:#8a5cd6; --sport:#0f9e9a; --event:#c2448f;
+  --mix:20%;
+  --display:"Familjen Grotesk","Helvetica Neue",Arial,sans-serif;
+  --body:"IBM Plex Sans",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0e141b; --surface:#151d26; --fg:#e6edf4; --muted:#93a1b1; --line:#26313d; --line-soft:#1c252f;
+  --accent:#6cc0e0; --today:#16303b; --school:#2a3440; --shift:#c9d4e0; --exam:#f2f5f8; --mix:28%; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e141b; --surface:#151d26; --fg:#e6edf4; --muted:#93a1b1; --line:#26313d; --line-soft:#1c252f;
+  --accent:#6cc0e0; --today:#16303b; --school:#2a3440; --shift:#c9d4e0; --exam:#f2f5f8; --mix:28%; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:14px}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:16px;padding-block:24px 48px;display:grid;gap:18px}
+header{display:flex;flex-wrap:wrap;align-items:end;justify-content:space-between;gap:12px}
+h1{font-family:var(--display);font-size:clamp(26px,4vw,36px);font-weight:700;letter-spacing:-.01em;margin:0;text-wrap:balance}
+.sub{color:var(--muted);margin:4px 0 0;max-width:62ch}
+.countdown{font-family:var(--mono);font-size:13px;color:var(--muted);text-align:right}
+.countdown b{font-family:var(--display);font-size:28px;color:var(--accent);display:block;line-height:1}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.tab{flex:none;border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:999px;padding:7px 14px;font:500 13px var(--body);cursor:pointer;white-space:nowrap}
+.tab small{color:var(--muted);font-family:var(--mono);margin-left:6px}
+.tab[aria-selected="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.tab[aria-selected="true"] small{color:inherit;opacity:.7}
+.tab.exam:not([aria-selected="true"]){border-color:var(--spec)}
+.tab:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.summary{display:grid;grid-template-columns:auto 1fr;gap:10px 22px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.summary .total{font-family:var(--display);font-size:30px;font-weight:700;line-height:1}
+.summary .total span{display:block;font:500 11px var(--body);color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-top:4px}
+.bar{display:flex;height:12px;border-radius:6px;overflow:hidden;background:var(--line-soft)}
+.bar i{display:block;height:100%}
+.chips{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px;font-size:12px;color:var(--muted);font-family:var(--mono)}
+.chips span::before{content:"";display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--c);margin-right:6px;vertical-align:-1px}
+.focus{grid-column:1/-1;margin:0;color:var(--fg);font-size:13.5px;max-width:90ch}
+.scroller{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+.grid{display:grid;grid-template-columns:52px repeat(7,minmax(118px,1fr));min-width:880px}
+.dh{position:sticky;top:0;z-index:3;background:var(--surface);border-bottom:1px solid var(--line);border-left:1px solid var(--line-soft);padding:9px 8px 8px;min-height:62px}
+.dh.corner{border-left:0}
+.dh .dn{font-family:var(--display);font-weight:600;font-size:15px}
+.dh .dd{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.dh .due{display:block;margin-top:5px;font-size:10.5px;font-weight:600;line-height:1.25;color:var(--spec)}
+.dh.is-today{background:var(--today)}
+.dh.is-today .dn::after{content:"Today";font:600 9.5px var(--body);text-transform:uppercase;letter-spacing:.08em;background:var(--accent);color:var(--surface);border-radius:4px;padding:1px 5px;margin-left:6px;vertical-align:2px}
+.times{position:relative}
+.times div{position:absolute;right:8px;font-family:var(--mono);font-size:10.5px;color:var(--muted);transform:translateY(-6px)}
+.col{position:relative;border-left:1px solid var(--line-soft);background-image:repeating-linear-gradient(to bottom,var(--line-soft) 0 1px,transparent 1px var(--hour))}
+.col.is-today{background-color:color-mix(in srgb,var(--today) 55%,transparent)}
+.b{position:absolute;left:3px;right:3px;border-radius:6px;padding:3px 6px;overflow:hidden;font-size:11.5px;line-height:1.25;border-left:3px solid var(--c);background:color-mix(in srgb,var(--c) var(--mix),var(--surface));color:var(--fg)}
+.b .t{font-family:var(--mono);font-size:9.5px;color:var(--muted);display:block}
+.b .l{font-weight:600;display:block}
+.b.short .t{display:inline;margin-right:4px}
+.b.short .l{display:inline}
+.b.school{border-left-color:transparent;background:repeating-linear-gradient(135deg,var(--school) 0 6px,color-mix(in srgb,var(--school) 60%,var(--surface)) 6px 12px);color:var(--muted)}
+.b.shift{background:var(--shift);color:var(--surface);border-left-color:var(--meth)}
+.b.shift .t{color:inherit;opacity:.75}
+.b.exam{background:var(--exam);color:var(--surface);border-left:3px solid var(--spec);box-shadow:0 0 0 2px color-mix(in srgb,var(--spec) 40%,transparent)}
+.b.exam .t{color:inherit;opacity:.75}
+.b.cram{background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--c) 70%,var(--surface)) 0 7px,color-mix(in srgb,var(--c) 52%,var(--surface)) 7px 14px);border-left-color:var(--fg)}
+.b.cram .l::before{content:"CRAM";font:700 9px var(--mono);letter-spacing:.06em;background:var(--fg);color:var(--surface);border-radius:3px;padding:0 4px;margin-right:5px}
+.b.cut{background:transparent;border:1px dashed var(--muted);border-left:3px dashed var(--muted);color:var(--muted)}
+.b.cut .l{text-decoration:line-through}
+.legend{display:flex;flex-wrap:wrap;gap:8px 16px;font-size:12px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:22px;height:12px;border-radius:3px;display:inline-block}
+.notes{color:var(--muted);font-size:12.5px;margin:0;max-width:85ch;line-height:1.5}
+.plan{display:grid;gap:18px}
+.views{display:inline-flex;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:4px;gap:4px;justify-self:start}
+.view{border:0;background:transparent;color:var(--muted);font:600 14px var(--display);padding:9px 18px;border-radius:9px;cursor:pointer}
+.view[aria-selected="true"]{background:var(--fg);color:var(--bg)}
+.view:focus-visible,.pad:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.track{display:grid;gap:18px}
+.now{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}
+.now .big{font-family:var(--mono);font-size:clamp(34px,8vw,52px);font-weight:500;line-height:1;font-variant-numeric:tabular-nums}
+.now .what{font:600 13px var(--body);color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--c,var(--muted))}
+.now.on .dot{animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.3}}
+.now .today{font-family:var(--mono);font-size:13px;color:var(--muted);text-align:right}
+.now .today b{display:block;font-family:var(--display);font-size:24px;color:var(--fg)}
+.stop{border:1px solid var(--line);background:var(--bg);color:var(--fg);font:600 14px var(--body);border-radius:10px;padding:10px 16px;cursor:pointer}
+.pads{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.pad{position:relative;min-height:128px;border:0;border-radius:16px;cursor:pointer;text-align:left;padding:16px;color:#14202e;background:var(--c);display:flex;flex-direction:column;justify-content:space-between;font-family:var(--body);transition:transform .12s, box-shadow .12s;-webkit-tap-highlight-color:transparent}
+.pad:active{transform:scale(.97)}
+.pad .pn{font:700 20px var(--display)}
+.pad .pt{font-family:var(--mono);font-size:13px;opacity:.8}
+.pad .pt b{font-size:20px;font-weight:500;opacity:1;display:block;font-variant-numeric:tabular-nums}
+.pad.on{box-shadow:0 0 0 3px var(--bg),0 0 0 6px var(--c)}
+.pad.on::after{content:"Running";position:absolute;top:14px;right:14px;font:700 10px var(--mono);letter-spacing:.08em;text-transform:uppercase;background:#14202e;color:#fff;padding:3px 7px;border-radius:5px}
+.pad.dim{opacity:.55}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.panel h2{font:600 15px var(--display);margin:0 0 12px}
+.progress{display:grid;gap:10px}
+.prow{display:grid;grid-template-columns:96px 1fr 110px;gap:10px;align-items:center;font-size:13px}
+.prow .track2{height:12px;background:var(--line-soft);border-radius:6px;overflow:hidden}
+.prow .track2 i{display:block;height:100%;background:var(--c);border-radius:6px}
+.prow .num{font-family:var(--mono);font-size:12px;color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
+.log{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.log li{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line-soft);font-size:13px}
+.log li:last-child{border-bottom:0}
+.log .when{color:var(--muted);font-family:var(--mono);font-size:12px;margin-left:auto}
+.log .dur{font-family:var(--mono);font-size:12px;min-width:56px;text-align:right}
+.log .del{border:0;background:none;color:var(--muted);cursor:pointer;font-size:12px;padding:4px 6px;border-radius:6px}
+.log .del.confirm{background:var(--spec);color:#fff}
+.log .empty{color:var(--muted)}
+@media (max-width:560px){.summary{grid-template-columns:1fr}.countdown{text-align:left}.pads{grid-template-columns:1fr 1fr}.pad{min-height:110px}.prow{grid-template-columns:80px 1fr 92px}}
+@media (prefers-reduced-motion:no-preference){.b{transition:transform .15s}.b:hover{transform:scale(1.02);z-index:2}}
+</style>
+<style>body{margin:0}*{box-sizing:border-box}[hidden]{display:none!important}</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Sem 2 Study Timetable</h1>
+      <p class="sub">Hour by hour from now to your last exam. Coloured blocks are study, striped blocks marked CRAM are last-minute review, dashed blocks are things worth cutting.</p>
+    </div>
+    <div class="countdown" id="countdown"></div>
+  </header>
+
+  <div class="views" role="tablist" aria-label="Views">
+    <button class="view" id="vTrack" role="tab">Study timer</button>
+    <button class="view" id="vPlan" role="tab">Timetable</button>
+  </div>
+
+  <section id="track" class="track" hidden>
+    <div class="now" id="now"></div>
+    <div class="pads" id="pads"></div>
+    <div class="panel">
+      <h2>This week: done vs planned</h2>
+      <div id="progress" class="progress"></div>
+    </div>
+    <div class="panel">
+      <h2>Recent sessions</h2>
+      <ul id="log" class="log"></ul>
+    </div>
+    <p class="notes">Tap a subject to start its timer, tap it again to pause. Tapping a different subject switches over. The timer keeps running if you close the page. Times are saved on this device only.</p>
+  </section>
+
+  <section id="plan" class="plan">
+  <nav class="tabs" role="tablist" id="tabs" aria-label="Weeks"></nav>
+
+  <section class="summary" id="summary" aria-live="polite"></section>
+
+  <div class="scroller"><div class="grid" id="grid"></div></div>
+
+  <div class="legend" id="legend"></div>
+  <p class="notes">Shifts are only rostered to Sun 18 Oct. If you pick one up later, swap it in and drop that day to about 2 hours. School is shown as 8:30 to 3:15. Dates come from SEQTA (checked 12 Oct), TickTick and the Y11 Sem 2 exam timetable. No classes are shown during the exam fortnight.</p>
+  </section>
+</div>
+
+<script src="schedule.js"></script>
+<script>
+const START=6, END=24, HOUR=46;
+document.documentElement.style.setProperty('--hour', HOUR+'px');
+
+const TYPES={
+  eng:{n:"English",c:"--eng",study:1}, hbio:{n:"Human Bio",c:"--hbio",study:1}, spec:{n:"Spec",c:"--spec",study:1},
+  meth:{n:"Methods",c:"--meth",study:1}, chem:{n:"Chemistry",c:"--chem",study:1}, rel:{n:"Religion",c:"--rel",study:1},
+  school:{n:"School",c:"--school"}, shift:{n:"Shift",c:"--shift"}, exam:{n:"Exam",c:"--exam"},
+  tutor:{n:"Tutoring",c:"--tutor"}, sport:{n:"Netball",c:"--sport"}, event:{n:"Event",c:"--event"}, cut:{n:"Cut",c:"--muted"}
+};
+const SCHOOL=["8:30","15:15","school","School"];
+
+const DAYKEYS=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+function parseLine(line){
+  const t=String(line).trim();
+  if(t.toLowerCase()==="school")return SCHOOL;
+  const m=t.match(/^(\d{1,2}(?::\d{2})?)\s*-\s*(\d{1,2}(?::\d{2})?)\s+(\w+)\s*(cram\b)?\s*(.*)$/i);
+  if(!m){console.warn("Skipped schedule line:",line);return null}
+  const fix=s=>s.includes(":")?s:s+":00";
+  const type=TYPES[m[3].toLowerCase()]?m[3].toLowerCase():"event";
+  return [fix(m[1]),fix(m[2]),type,m[5]||TYPES[type].n,!!m[4]];
+}
+const WEEKS=(typeof SCHEDULE!=="undefined"?SCHEDULE:[]).map(w=>({
+  name:w.name,start:w.start,exam:!!w.exam,focus:w.focus||"",
+  due:Object.fromEntries(Object.entries(w.due||{}).map(([k,v])=>[DAYKEYS.indexOf(k),v])),
+  days:DAYKEYS.map(d=>(w[d]||[]).map(parseLine).filter(Boolean))
+}));
+
+const DOW=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+const toH=s=>{const[h,m]=s.split(":").map(Number);return h+m/60};
+const fmt=s=>{let[h,m]=s.split(":").map(Number);if(h===24)return"12am";const ap=h>=12?"pm":"am";h=h%12||12;return h+(m?":"+String(m).padStart(2,"0"):"")+ap};
+const addDays=(iso,n)=>{const d=new Date(iso+"T00:00:00");d.setDate(d.getDate()+n);return d};
+const todayISO=(()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")})();
+const iso=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+
+const tabs=document.getElementById("tabs"),grid=document.getElementById("grid"),summary=document.getElementById("summary");
+
+function studyHours(w){const t={};w.days.flat().forEach(b=>{if(TYPES[b[2]].study){t[b[2]]=(t[b[2]]||0)+toH(b[1])-toH(b[0])}});return t}
+
+WEEKS.forEach((w,i)=>{
+  const s=addDays(w.start,0),e=addDays(w.start,6);
+  const b=document.createElement("button");
+  b.className="tab"+(w.exam?" exam":"");b.setAttribute("role","tab");b.id="tab"+i;
+  b.innerHTML=`${w.name}<small>${s.getDate()} ${s.toLocaleString("en-AU",{month:"short"})}</small>`;
+  b.onclick=()=>show(i);tabs.appendChild(b);
+});
+
+function show(i){
+  const w=WEEKS[i];
+  [...tabs.children].forEach((t,j)=>t.setAttribute("aria-selected",j===i));
+  // summary
+  const h=studyHours(w),total=Object.values(h).reduce((a,b)=>a+b,0);
+  const keys=Object.keys(h).sort((a,b)=>h[b]-h[a]);
+  summary.innerHTML=`<div class="total">${total%1?total.toFixed(1):total}h<span>study this week</span></div>
+   <div><div class="bar">${keys.map(k=>`<i style="width:${h[k]/total*100}%;background:var(${TYPES[k].c})"></i>`).join("")}</div>
+   <div class="chips">${keys.map(k=>`<span style="--c:var(${TYPES[k].c})">${TYPES[k].n} ${h[k]%1?h[k].toFixed(1):h[k]}h</span>`).join("")}</div></div>
+   <p class="focus">${w.focus}</p>`;
+  // grid
+  let html=`<div class="dh corner"></div>`;
+  for(let d=0;d<7;d++){
+    const date=addDays(w.start,d),isT=iso(date)===todayISO,has=w.days[d]&&w.days[d].length;
+    const due=w.due&&w.due[d]?`<span class="due">${w.due[d]}</span>`:"";
+    html+=`<div class="dh${isT?" is-today":""}"><div class="dn">${DOW[d]}</div><div class="dd">${date.getDate()} ${date.toLocaleString("en-AU",{month:"short"})}${has?"":" · free"}</div>${due}</div>`;
+  }
+  const H=(END-START)*HOUR;
+  html+=`<div class="times" style="height:${H}px">`;
+  for(let t=START+1;t<END;t++)html+=`<div style="top:${(t-START)*HOUR}px">${t%12||12}${t>=12?"pm":"am"}</div>`;
+  html+=`</div>`;
+  for(let d=0;d<7;d++){
+    const isT=iso(addDays(w.start,d))===todayISO;
+    html+=`<div class="col${isT?" is-today":""}" style="height:${H}px">`;
+    (w.days[d]||[]).forEach(([s,e,t,l,cram])=>{
+      const top=(toH(s)-START)*HOUR,ht=(toH(e)-toH(s))*HOUR-2,ty=TYPES[t];
+      const cls=["b",t,cram?"cram":"",ht<36?"short":""].join(" ");
+      html+=`<div class="${cls}" style="top:${top+1}px;height:${ht}px;--c:var(${ty.c})" title="${fmt(s)} to ${fmt(e)} · ${l}"><span class="t">${fmt(s)}–${fmt(e)}</span><span class="l">${l}</span></div>`;
+    });
+    html+=`</div>`;
+  }
+  grid.innerHTML=html;
+}
+
+// legend
+document.getElementById("legend").innerHTML=
+ ["eng","hbio","spec","meth","chem","rel"].map(k=>`<span><i style="background:color-mix(in srgb,var(${TYPES[k].c}) var(--mix),var(--surface));border-left:3px solid var(${TYPES[k].c})"></i>${TYPES[k].n}</span>`).join("")+
+ `<span><i style="background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--spec) 70%,var(--surface)) 0 5px,color-mix(in srgb,var(--spec) 50%,var(--surface)) 5px 10px)"></i>Cram</span>
+  <span><i style="background:var(--exam)"></i>Exam</span><span><i style="background:var(--shift)"></i>Shift</span>
+  <span><i style="background:repeating-linear-gradient(135deg,var(--school) 0 4px,transparent 4px 8px)"></i>School</span>
+  <span><i style="border:1px dashed var(--muted)"></i>Suggested cut</span>`;
+
+// countdown to first exam
+(()=>{const ex=new Date("2026-11-09T08:45:00+08:00"),last=new Date("2026-11-18T11:15:00+08:00"),now=new Date();
+ const el=document.getElementById("countdown");
+ if(now<ex){el.innerHTML=`<b>${Math.ceil((ex-now)/864e5)} days</b>until English, 9 Nov`}
+ else if(now<last){el.innerHTML=`<b>${Math.ceil((last-now)/864e5)} days</b>until your last exam`}
+ else el.innerHTML=`<b>Done</b>exams finished`;})();
+
+// open on the current week
+let start=WEEKS.findIndex(w=>{const s=w.start,e=iso(addDays(w.start,6));return todayISO>=s&&todayISO<=e});
+if(start<0)start=todayISO>WEEKS[WEEKS.length-1].start?WEEKS.length-1:0;
+show(start);
+
+/* ---------- Study timer ---------- */
+const SUBJ=["eng","hbio","spec","meth","chem"];
+const KEY="studyTracker.v1";
+let st={sessions:[],running:null};
+try{const raw=localStorage.getItem(KEY);if(raw)st=Object.assign(st,JSON.parse(raw))}catch(e){}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(st))}catch(e){}};
+const pads=document.getElementById("pads"),nowEl=document.getElementById("now"),progEl=document.getElementById("progress"),logEl=document.getElementById("log");
+
+const hms=ms=>{const s=Math.floor(ms/1000);return String(Math.floor(s/3600))+":"+String(Math.floor(s%3600/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0")};
+const hm=ms=>{const m=Math.round(ms/60000);return m<60?m+"m":Math.floor(m/60)+"h "+String(m%60).padStart(2,"0")+"m"};
+const dayStart=d=>{const x=new Date(d);x.setHours(0,0,0,0);return x.getTime()};
+const weekStart=d=>{const x=new Date(dayStart(d));const dow=(x.getDay()+6)%7;x.setDate(x.getDate()-dow);return x.getTime()};
+
+// time from all sessions (plus the running one) inside [from,to)
+function spent(subj,from,to){
+  let t=0;const now=Date.now();
+  const all=st.running?st.sessions.concat([{s:st.running.s,start:st.running.start,end:now}]):st.sessions;
+  all.forEach(x=>{if(subj&&x.s!==subj)return;const a=Math.max(x.start,from),b=Math.min(x.end,to);if(b>a)t+=b-a});
+  return t;
+}
+function stopRunning(){
+  if(!st.running)return;
+  const end=Date.now();
+  if(end-st.running.start>=30000)st.sessions.push({s:st.running.s,start:st.running.start,end});
+  st.running=null;
+}
+function tap(s){
+  const was=st.running&&st.running.s;
+  stopRunning();
+  if(was!==s)st.running={s,start:Date.now()};
+  save();renderTrack();
+}
+SUBJ.forEach(s=>{
+  const b=document.createElement("button");
+  b.className="pad";b.id="pad-"+s;b.style.setProperty("--c",`var(${TYPES[s].c})`);
+  b.innerHTML=`<span class="pn">${TYPES[s].n}</span><span class="pt"><b>0:00:00</b>today</span>`;
+  b.onclick=()=>tap(s);pads.appendChild(b);
+});
+
+function planThisWeek(){
+  const ws=iso(new Date(weekStart(Date.now())));
+  const w=WEEKS.find(x=>x.start===ws);
+  return w?studyHours(w):{};
+}
+function tick(){
+  const now=Date.now(),d0=dayStart(now),d1=d0+864e5;
+  SUBJ.forEach(s=>{
+    const b=document.getElementById("pad-"+s);
+    b.querySelector("b").textContent=hms(spent(s,d0,d1));
+    b.classList.toggle("on",!!st.running&&st.running.s===s);
+    b.classList.toggle("dim",!!st.running&&st.running.s!==s);
+  });
+  const todayAll=spent(null,d0,d1);
+  if(st.running){
+    const s=st.running.s;
+    nowEl.className="now on";nowEl.style.setProperty("--c",`var(${TYPES[s].c})`);
+    nowEl.innerHTML=`<div><div class="what"><span class="dot"></span>Studying ${TYPES[s].n}</div><div class="big">${hms(now-st.running.start)}</div></div>
+      <button class="stop" id="stopBtn">Stop</button>
+      <div class="today"><b>${hm(todayAll)}</b>studied today</div>`;
+    document.getElementById("stopBtn").onclick=()=>{stopRunning();save();renderTrack()};
+  }else{
+    nowEl.className="now";nowEl.style.removeProperty("--c");
+    nowEl.innerHTML=`<div><div class="what"><span class="dot"></span>Not studying</div><div class="big">0:00:00</div></div>
+      <div class="today"><b>${hm(todayAll)}</b>studied today</div>`;
+  }
+}
+function renderTrack(){
+  tick();
+  const w0=weekStart(Date.now()),w1=w0+7*864e5,plan=planThisWeek();
+  progEl.innerHTML=SUBJ.map(s=>{
+    const done=spent(s,w0,w1)/36e5,p=plan[s]||0,pct=p?Math.min(100,done/p*100):(done?100:0);
+    return `<div class="prow" style="--c:var(${TYPES[s].c})"><span>${TYPES[s].n}</span><div class="track2"><i style="width:${pct}%"></i></div><span class="num">${done.toFixed(1)} / ${p%1?p.toFixed(1):p}h</span></div>`;
+  }).join("");
+  const recent=st.sessions.map((x,i)=>({...x,i})).sort((a,b)=>b.start-a.start).slice(0,10);
+  logEl.innerHTML=recent.length?recent.map(x=>{
+    const d=new Date(x.start);
+    return `<li><span class="dot" style="--c:var(${TYPES[x.s].c})"></span>${TYPES[x.s].n}<span class="when">${d.toLocaleDateString("en-AU",{weekday:"short",day:"numeric",month:"short"})} ${d.toLocaleTimeString("en-AU",{hour:"numeric",minute:"2-digit"})}</span><span class="dur">${hm(x.end-x.start)}</span><button class="del" data-i="${x.i}">Delete</button></li>`;
+  }).join(""):`<li class="empty">No sessions yet. Tap a subject above to start.</li>`;
+  logEl.querySelectorAll(".del").forEach(btn=>btn.onclick=()=>{
+    if(!btn.classList.contains("confirm")){btn.classList.add("confirm");btn.textContent="Sure?";setTimeout(()=>{btn.classList.remove("confirm");btn.textContent="Delete"},3000);return}
+    st.sessions.splice(+btn.dataset.i,1);save();renderTrack();
+  });
+}
+setInterval(()=>{if(!document.getElementById("track").hidden)tick()},1000);
+
+/* ---------- view switch ---------- */
+function setView(v){
+  document.getElementById("track").hidden=v!=="track";
+  document.getElementById("plan").hidden=v!=="plan";
+  document.getElementById("vTrack").setAttribute("aria-selected",v==="track");
+  document.getElementById("vPlan").setAttribute("aria-selected",v==="plan");
+  try{localStorage.setItem("studyView",v)}catch(e){}
+  if(v==="track")renderTrack();
+}
+document.getElementById("vTrack").onclick=()=>setView("track");
+document.getElementById("vPlan").onclick=()=>setView("plan");
+let v0="track";try{v0=localStorage.getItem("studyView")||"track"}catch(e){}
+setView(v0);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&v0)renderTrack()});
+</script>
+
+</body>
+</html>
