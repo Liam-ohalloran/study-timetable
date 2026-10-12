@@ -135,6 +135,7 @@ h1{font-family:var(--display);font-size:clamp(26px,4vw,36px);font-weight:700;let
 .tb{position:absolute;left:5px;right:5px;z-index:3;background:var(--surface);color:var(--fg);border:2px solid var(--fg);border-radius:4px;padding:3px 6px;display:grid;align-content:start;gap:1px;box-shadow:3px 3px 0 var(--fg);overflow:hidden;pointer-events:auto;cursor:default}
 .tbh{display:flex;align-items:center;gap:4px;font:700 10px var(--mono);letter-spacing:.1em}
 .tbl{font-size:11px;font-weight:600;line-height:1.2}
+.tb.isdue{border-style:dashed;border-color:var(--muted);box-shadow:none;background:color-mix(in srgb,var(--surface) 92%,transparent)}
 /* header chips */
 .chipset{display:flex;flex-direction:column;gap:4px;margin-top:6px;align-items:flex-start}
 .chip{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;line-height:1.2;border-radius:5px;padding:2px 6px;max-width:100%}
@@ -328,7 +329,7 @@ function dueItems(w,d){
     if(/tomorrow/i.test(text))kind="note";
     else if(/exam/i.test(text))kind="exam";
     else if(/\bdue\b/i.test(text))kind="due";
-    else if(/test|validation|lab skills|assessment|task/i.test(text))kind="test";
+    else if(/test|validation|lab skills|assessment|task|oral/i.test(text))kind="test";
     return{text,kind};
   });
 }
@@ -372,11 +373,13 @@ function show(i){
       html+=`<button class="${cls}" data-d="${d}" data-k="${k}" style="top:${top+1}px;height:${ht}px;--c:var(${ty.c})" title="${fmt(s)} to ${fmt(e)} · ${esc(title)}${detail?" · "+esc(detail):""}">${ex}<span class="l">${esc(title)}</span>${detail?`<span class="d">${esc(detail)}</span>`:""}<span class="t">${fmt(s)}–${fmt(e)}</span></button>`;
     });
     // in-class tests: a marker over the school day
-    const tests=dueItems(w,d).filter(x=>x.kind==="test");
+    const sch=(w.days[d]||[]).find(b=>b[2]==="school");
+    const tests=sch?dueItems(w,d).filter(x=>x.kind==="test"||x.kind==="due"):[];
     if(tests.length){
-      const sch=(w.days[d]||[]).find(b=>b[2]==="school"),s0=sch?toH(sch[0])+0.5:9;
-      tests.forEach((x,j)=>{const top=(s0+j*1.1-START)*HOUR;
-        html+=`<div class="tb" style="top:${top}px;height:${HOUR-4}px" title="In-class test: ${esc(x.text)}"><span class="tbh">${ICON.test} TEST</span><span class="tbl">${esc(x.text)}</span></div>`});
+      const s0=toH(sch[0])+0.5;
+      tests.forEach((x,j)=>{const top=(s0+j*1.1-START)*HOUR,isDue=x.kind==="due";
+        const txt=isDue?x.text.replace(/\s*\bdue\b\s*/i," ").trim():x.text;
+        html+=`<div class="tb${isDue?" isdue":""}" style="top:${top}px;height:${HOUR-4}px" title="${isDue?"Due":"In-class test"}: ${esc(txt)}"><span class="tbh">${isDue?ICON.due+" DUE":ICON.test+" TEST"}</span><span class="tbl">${esc(txt)}</span></div>`});
     }
     html+=`</div>`;
   }
@@ -387,7 +390,7 @@ function show(i){
 document.getElementById("legend").innerHTML=
  ["eng","hbio","spec","meth","chem","rel"].map(k=>`<span><i style="background:color-mix(in srgb,var(${TYPES[k].c}) var(--mix),var(--surface));border-left:3px solid var(${TYPES[k].c})"></i>${TYPES[k].n}</span>`).join("")+
  `<span><i style="background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--spec) 70%,var(--surface)) 0 5px,color-mix(in srgb,var(--spec) 50%,var(--surface)) 5px 10px)"></i>Cram</span>
-  <span class="chip exam">${ICON.exam}<b>EXAM</b></span><span class="chip test">${ICON.test}<b>TEST</b> in class</span><span class="chip due">${ICON.due}<b>DUE</b></span><span><i style="background:var(--shift)"></i>Shift</span>
+  <span class="chip exam">${ICON.exam}<b>EXAM</b></span><span class="chip test">${ICON.test}<b>TEST</b> in class</span><span class="chip due">${ICON.due}<b>DUE</b> hand in</span><span><i style="background:var(--shift)"></i>Shift</span>
   <span><i style="background:repeating-linear-gradient(135deg,var(--school) 0 4px,transparent 4px 8px)"></i>School</span>
   <span><i style="border:1px dashed var(--muted)"></i>Suggested cut</span>`;
 
