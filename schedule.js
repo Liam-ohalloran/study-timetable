@@ -20,7 +20,7 @@ const SCHEDULE = [
 {
   name: "Week 1", start: "2026-10-12",
   focus: "Spec leads because of Thursday's Inv 2 validation, the Revision Assignment and Test 4 next week. Every other subject still gets a short block so nothing goes cold.",
-  due: { Tue: "Term 4 starts", Thu: "Spec Inv 2 validation" },
+  due: { Tue: "Term 4 starts", Thu: "Spec Inv 2 validation", Fri: "Stella's Halloween party (maybe)" },
   Mon: [
     "9:00-10:30 spec Inv 2: complex numbers",
     "11:00-11:45 meth Test 6: Ch 6 review",
