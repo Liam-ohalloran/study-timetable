@@ -63,9 +63,35 @@ h1{font-family:var(--display);font-size:clamp(26px,4vw,36px);font-weight:700;let
 .col.is-today{background-color:color-mix(in srgb,var(--today) 55%,transparent)}
 .b{position:absolute;left:3px;right:3px;border-radius:6px;padding:3px 6px;overflow:hidden;font-size:11.5px;line-height:1.25;border-left:3px solid var(--c);background:color-mix(in srgb,var(--c) var(--mix),var(--surface));color:var(--fg)}
 .b .t{font-family:var(--mono);font-size:9.5px;color:var(--muted);display:block}
-.b .l{font-weight:600;display:block}
-.b.short .t{display:inline;margin-right:4px}
-.b.short .l{display:inline}
+.b{font:inherit;text-align:left;cursor:pointer;display:block;border-top:0;border-right:0;border-bottom:0}
+.b:focus-visible{outline:2px solid var(--accent);outline-offset:1px;z-index:4}
+.b .l{font-weight:600;display:block;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.b .d{display:block;font-size:10.5px;line-height:1.25;opacity:.85}
+.b .t{margin-top:2px}
+.b.mid .t{display:none}
+.b.short{padding-block:1px}
+.b.short .l,.b.short .d{display:inline;font-size:11px}
+.b.short .d::before{content:" · "}
+.b.short{white-space:nowrap;text-overflow:ellipsis}
+.col{cursor:copy}
+.sheet{position:fixed;inset:0;z-index:20;background:color-mix(in srgb,#000 45%,transparent);display:flex;align-items:flex-end;justify-content:center;padding:16px;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))}
+.sheet form{background:var(--surface);color:var(--fg);border:1px solid var(--line);border-radius:16px;width:100%;max-width:440px;padding:18px;display:grid;gap:12px;box-shadow:0 20px 50px rgba(0,0,0,.3)}
+@media (min-width:640px){.sheet{align-items:center}}
+.sheet h3{margin:0;font:700 18px var(--display);display:flex;align-items:center;gap:8px}
+.sheet h3 .dot{width:12px;height:12px}
+.sheet label{display:grid;gap:5px;font-size:12px;font-weight:600;color:var(--muted)}
+.sheet input[type=text],.sheet input[type=time],.sheet select{font:16px var(--body);color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:100%}
+.sheet .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sheet .check{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--fg);font-weight:500}
+.sheet .check input{width:20px;height:20px}
+.sheet .acts{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;margin-top:4px}
+.sheet .acts div{display:flex;gap:8px}
+.btn{font:600 14px var(--body);border-radius:10px;padding:10px 16px;cursor:pointer;border:1px solid var(--line);background:var(--bg);color:var(--fg)}
+.btn.primary{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.btn.danger{color:var(--spec)}
+.btn.danger.confirm{background:var(--spec);color:#fff;border-color:var(--spec)}
+.sheet .err{color:var(--spec);font-size:12.5px;margin:0}
+.sheet .reset{font-size:12px;color:var(--muted);background:none;border:0;text-decoration:underline;cursor:pointer;padding:0;justify-self:start}
 .b.school{border-left-color:transparent;background:repeating-linear-gradient(135deg,var(--school) 0 6px,color-mix(in srgb,var(--school) 60%,var(--surface)) 6px 12px);color:var(--muted)}
 .b.shift{background:var(--shift);color:var(--surface);border-left-color:var(--meth)}
 .b.shift .t{color:inherit;opacity:.75}
@@ -161,7 +187,7 @@ h1{font-family:var(--display);font-size:clamp(26px,4vw,36px);font-weight:700;let
   <div class="scroller"><div class="grid" id="grid"></div></div>
 
   <div class="legend" id="legend"></div>
-  <p class="notes">Shifts are only rostered to Sun 18 Oct. If you pick one up later, swap it in and drop that day to about 2 hours. School is shown as 8:30 to 3:15. Dates come from SEQTA (checked 12 Oct), TickTick and the Y11 Sem 2 exam timetable. No classes are shown during the exam fortnight.</p>
+  <p class="notes">Shifts are only rostered to Sun 18 Oct. If you pick one up later, swap it in and drop that day to about 2 hours. School is shown as 8:30 to 3:15. Tap any block to edit or delete it, or tap an empty spot to add one. Your edits save on this device. Dates come from TickTick and the Y11 Sem 2 exam timetable. No classes are shown during the exam fortnight.</p>
   </section>
 </div>
 
@@ -193,6 +219,21 @@ const WEEKS=(typeof SCHEDULE!=="undefined"?SCHEDULE:[]).map(w=>({
   due:Object.fromEntries(Object.entries(w.due||{}).map(([k,v])=>[DAYKEYS.indexOf(k),v])),
   days:DAYKEYS.map(d=>(w[d]||[]).map(parseLine).filter(Boolean))
 }));
+WEEKS.forEach(w=>w.orig=w.days.map(day=>day.map(b=>[...b])));
+
+/* edits made by tapping blocks: saved on this device, layered over schedule.js */
+const EKEY="scheduleEdits.v1";
+let EDITS={};try{EDITS=JSON.parse(localStorage.getItem(EKEY)||"{}")}catch(e){}
+const ekey=(w,d)=>w.start+"|"+d;
+function applyEdits(){WEEKS.forEach(w=>{w.days=w.orig.map((day,d)=>(EDITS[ekey(w,d)]||day).map(b=>[...b]))})}
+function saveDay(w,d){
+  EDITS[ekey(w,d)]=w.days[d].slice().sort((a,b)=>toHr(a[0])-toHr(b[0]));
+  try{localStorage.setItem(EKEY,JSON.stringify(EDITS))}catch(e){}
+}
+function resetDay(w,d){delete EDITS[ekey(w,d)];try{localStorage.setItem(EKEY,JSON.stringify(EDITS))}catch(e){}}
+const toHr=s=>{const[h,m]=s.split(":").map(Number);return h+m/60};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+applyEdits();
 
 const DOW=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 const toH=s=>{const[h,m]=s.split(":").map(Number);return h+m/60};
@@ -213,7 +254,9 @@ WEEKS.forEach((w,i)=>{
   b.onclick=()=>show(i);tabs.appendChild(b);
 });
 
+let CUR=0;
 function show(i){
+  CUR=i;
   const w=WEEKS[i];
   [...tabs.children].forEach((t,j)=>t.setAttribute("aria-selected",j===i));
   // summary
@@ -236,11 +279,12 @@ function show(i){
   html+=`</div>`;
   for(let d=0;d<7;d++){
     const isT=iso(addDays(w.start,d))===todayISO;
-    html+=`<div class="col${isT?" is-today":""}" style="height:${H}px">`;
-    (w.days[d]||[]).forEach(([s,e,t,l,cram])=>{
+    html+=`<div class="col${isT?" is-today":""}" data-d="${d}" style="height:${H}px">`;
+    (w.days[d]||[]).forEach(([s,e,t,l,cram],k)=>{
       const top=(toH(s)-START)*HOUR,ht=(toH(e)-toH(s))*HOUR-2,ty=TYPES[t];
-      const cls=["b",t,cram?"cram":"",ht<36?"short":""].join(" ");
-      html+=`<div class="${cls}" style="top:${top+1}px;height:${ht}px;--c:var(${ty.c})" title="${fmt(s)} to ${fmt(e)} · ${l}"><span class="t">${fmt(s)}–${fmt(e)}</span><span class="l">${l}</span></div>`;
+      const cls=["b",t,cram?"cram":"",ht<36?"short":"",ht<58?"mid":""].join(" ");
+      const title=ty.study?ty.n:l, detail=ty.study&&l!==ty.n?l:"";
+      html+=`<button class="${cls}" data-d="${d}" data-k="${k}" style="top:${top+1}px;height:${ht}px;--c:var(${ty.c})" title="${fmt(s)} to ${fmt(e)} · ${esc(title)}${detail?" · "+esc(detail):""}"><span class="l">${esc(title)}</span>${detail?`<span class="d">${esc(detail)}</span>`:""}<span class="t">${fmt(s)}–${fmt(e)}</span></button>`;
     });
     html+=`</div>`;
   }
@@ -266,6 +310,65 @@ document.getElementById("legend").innerHTML=
 let start=WEEKS.findIndex(w=>{const s=w.start,e=iso(addDays(w.start,6));return todayISO>=s&&todayISO<=e});
 if(start<0)start=todayISO>WEEKS[WEEKS.length-1].start?WEEKS.length-1:0;
 show(start);
+
+/* ---------- tap a block to edit, tap empty space to add ---------- */
+const hh=x=>String(Math.floor(x)).padStart(2,"0")+":"+String(Math.round((x%1)*60)).padStart(2,"0");
+const STUDY_KEYS=Object.keys(TYPES).filter(k=>TYPES[k].study), OTHER_KEYS=Object.keys(TYPES).filter(k=>!TYPES[k].study);
+const sheet=document.createElement("div");sheet.className="sheet";sheet.hidden=true;document.body.appendChild(sheet);
+grid.addEventListener("click",e=>{
+  const b=e.target.closest(".b");
+  if(b){openEditor(+b.dataset.d,+b.dataset.k);return}
+  const col=e.target.closest(".col");
+  if(col){const r=col.getBoundingClientRect();const h=Math.max(START,Math.min(END-1,Math.floor((START+(e.clientY-r.top)/HOUR)*2)/2));openEditor(+col.dataset.d,-1,h)}
+});
+function openEditor(d,k,startH){
+  const w=WEEKS[CUR],isNew=k<0;
+  const blk=isNew?[hh(startH),hh(Math.min(END,startH+1)),"spec","",false]:w.days[d][k];
+  const [s,e,t,l,cram]=blk, ty=TYPES[t];
+  const detail=ty.study&&l===ty.n?"":l;
+  const date=addDays(w.start,d);
+  const opts=(keys)=>keys.map(x=>`<option value="${x}"${x===t?" selected":""}>${TYPES[x].n}</option>`).join("");
+  sheet.innerHTML=`<form id="edForm" novalidate>
+    <h3><span class="dot" id="edDot" style="background:var(${ty.c})"></span>${isNew?"Add block":"Edit block"} · ${DOW[d]} ${date.getDate()} ${date.toLocaleString("en-AU",{month:"short"})}</h3>
+    <label>Subject or type<select id="edType"><optgroup label="Study">${opts(STUDY_KEYS)}</optgroup><optgroup label="Other">${opts(OTHER_KEYS)}</optgroup></select></label>
+    <label><span id="edDetailLbl">What you're doing</span><input type="text" id="edDetail" value="${esc(detail)}" placeholder="e.g. Test 4 practice questions"></label>
+    <div class="row2"><label>Start<input type="time" id="edStart" step="300" value="${hh(toH(s))}"></label><label>End<input type="time" id="edEnd" step="300" value="${toH(e)>=24?"00:00":hh(toH(e))}"></label></div>
+    <label class="check" id="edCramWrap"><input type="checkbox" id="edCram"${cram?" checked":""}> Cram block</label>
+    <p class="err" id="edErr" hidden></p>
+    <div class="acts"><div>${isNew?"":`<button type="button" class="btn danger" id="edDel">Delete</button>`}</div>
+      <div><button type="button" class="btn" id="edCancel">Cancel</button><button type="submit" class="btn primary">${isNew?"Add":"Save"}</button></div></div>
+    ${EDITS[ekey(w,d)]?`<button type="button" class="reset" id="edReset">Undo all my changes to this day</button>`:""}
+  </form>`;
+  sheet.hidden=false;
+  const $=id=>document.getElementById(id);
+  const sync=()=>{const tt=$("edType").value,st=TYPES[tt].study;$("edDot").style.background=`var(${TYPES[tt].c})`;$("edCramWrap").hidden=!st;$("edDetailLbl").textContent=st?"What you're doing":"Title"};
+  sync();$("edType").onchange=sync;
+  setTimeout(()=>$(isNew?"edDetail":"edType").focus(),30);
+  $("edCancel").onclick=closeEditor;
+  if($("edReset"))$("edReset").onclick=()=>{resetDay(w,d);applyEdits();closeEditor();show(CUR)};
+  if($("edDel"))$("edDel").onclick=ev=>{
+    const btn=ev.currentTarget;
+    if(!btn.classList.contains("confirm")){btn.classList.add("confirm");btn.textContent="Tap again to delete";return}
+    w.days[d].splice(k,1);saveDay(w,d);closeEditor();show(CUR);
+  };
+  $("edForm").onsubmit=ev=>{
+    ev.preventDefault();
+    const tt=$("edType").value,st=TYPES[tt].study;
+    const sv=$("edStart").value,ev2=$("edEnd").value;
+    if(!sv||!ev2)return showErr("Pick a start and end time.");
+    const sH=toH(sv);let eH=toH(ev2);if(eH===0)eH=24;
+    if(sH<START)return showErr("Start can't be before 6am.");
+    if(eH<=sH)return showErr("End time needs to be after the start time.");
+    const det=$("edDetail").value.trim();
+    const nb=[hh(sH),eH>=24?"24:00":hh(eH),tt,det||TYPES[tt].n,st&&$("edCram").checked];
+    if(isNew)w.days[d].push(nb);else w.days[d][k]=nb;
+    saveDay(w,d);closeEditor();show(CUR);
+  };
+  function showErr(m){$("edErr").textContent=m;$("edErr").hidden=false}
+}
+function closeEditor(){sheet.hidden=true;sheet.innerHTML=""}
+sheet.addEventListener("click",e=>{if(e.target===sheet)closeEditor()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!sheet.hidden)closeEditor()});
 
 /* ---------- Study timer ---------- */
 const SUBJ=["eng","hbio","spec","meth","chem"];

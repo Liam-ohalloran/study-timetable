@@ -65,8 +65,8 @@ const SCHEDULE = [
 
 {
   name: "Week 2", start: "2026-10-19",
-  focus: "Spec Test 4 is Friday and English 7B is due Monday 26, so those two share most of the week. Methods, Chem and Human Bio get steady blocks ahead of their tests next week.",
-  due: { Tue: "Spec Revision Assignment due", Fri: "Spec Test 4" },
+  focus: "English 7B is due Monday 26, so it leads the week. Spec Test 4 prep starts now since it's on Thursday 29 with Methods Test 6 and the Chem validation, and Human Bio gets steady lab skills blocks.",
+  due: { Tue: "Spec Revision Assignment due" },
   Mon: [
     "school",
     "15:45-16:45 spec Revision Assignment: finalise",
@@ -74,20 +74,20 @@ const SCHEDULE = [
   ],
   Tue: [
     "school",
-    "15:30-16:30 spec Test 4: practice questions",
+    "15:30-16:30 meth Test 6: Ch 6 questions",
     "16:45-17:45 tutor Leo tutoring",
     "18:50-19:50 sport Spring netball"
   ],
   Wed: [
     "school",
-    "16:00-17:00 spec Test 4: practice questions",
+    "16:00-17:00 eng 7B: keep drafting",
     "19:00-19:45 hbio Lab skills: methods + safety"
   ],
   Thu: [
     "school",
-    "15:45-16:45 spec Test 4: timed past test",
+    "15:45-16:45 spec Test 4: practice questions",
     "18:00-19:00 tutor Laura tutoring",
-    "19:30-20:00 spec cram Test 4: formulas + errors"
+    "19:30-20:15 chem Rates: collision theory"
   ],
   Fri: [
     "school",
@@ -95,38 +95,41 @@ const SCHEDULE = [
   ],
   Sat: [
     "9:00-10:30 eng 7B polish + oral rehearsal",
-    "11:00-12:00 meth Test 6: Ch 6-7",
+    "11:00-12:00 spec Test 4: practice questions",
     "13:00-14:00 chem Validation prep: rates"
   ],
   Sun: [
     "10:00-10:45 eng Oral run-through",
-    "11:00-12:00 meth Test 6: Ch 8",
+    "11:00-12:00 meth Test 6: Ch 7",
     "13:00-13:45 hbio Lab skills: practise techniques",
-    "14:00-14:45 chem Rates graphs + calcs"
+    "14:00-14:45 spec Test 4: weak spots"
   ],
 },
 
 {
   name: "Week 3", start: "2026-10-26",
-  focus: "Methods Test 6 and the Chem validation are Thursday and Human Bio lab skills is Friday, so those three lead. Spec and English get short exam-prep blocks, and Methods Rev Test 2 prep starts on the weekend.",
-  due: { Mon: "English 7B due", Thu: "Methods Test 6 · Chem Inv 2 validation", Fri: "HBio Task 9 lab skills", Sat: "Halloween party" },
+  focus: "Thursday has Methods Test 6, Spec Test 4 and the Chem validation, then Human Bio lab skills on Friday, so those four lead. English gets a short exam-prep block, and Methods Rev Test 2 prep starts on the weekend.",
+  due: { Mon: "English 7B due", Thu: "Methods Test 6 · Spec Test 4 · Chem Inv 2 validation", Fri: "HBio Task 9 lab skills", Sat: "Halloween party" },
   Mon: [
     "school",
-    "15:45-16:45 meth Test 6: practice questions",
+    "15:45-16:45 meth Test 6: Ch 8",
+    "17:00-17:45 spec Test 4: practice questions",
     "19:00-20:00 chem Validation prep: method + calcs"
   ],
   Tue: [
     "school",
-    "15:30-16:30 meth Test 6: past test, mark it",
+    "15:30-16:30 spec Test 4: timed past test",
     "16:45-17:45 tutor Leo tutoring",
-    "18:50-19:50 sport Spring netball"
+    "18:50-19:50 sport Spring netball",
+    "20:00-20:45 meth Test 6: timed past test"
   ],
   Wed: [
     "school",
-    "15:45-16:45 chem cram Validation: rates, final check",
+    "15:45-16:45 chem cram Validation: final check",
     "17:00-17:45 meth Test 6: weak spots",
-    "19:00-19:45 spec Weekly topic review",
-    "20:00-20:30 meth cram Test 6: formula check"
+    "19:00-19:45 spec Test 4: weak spots",
+    "20:00-20:30 meth cram Test 6 formulas",
+    "20:30-21:00 spec cram Test 4 formulas"
   ],
   Thu: [
     "school",
