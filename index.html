@@ -74,6 +74,36 @@ h1{font-family:var(--display);font-size:clamp(26px,4vw,36px);font-weight:700;let
 .b.short .d::before{content:" · "}
 .b.short{white-space:nowrap;text-overflow:ellipsis}
 .col{cursor:copy}
+.todayhead{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px}
+.tdate{font:700 22px var(--display)}
+.tdue{color:var(--spec);font-weight:600;font-size:13px;margin-top:2px}
+.tnow{margin-top:6px;font-size:14px}
+.tnow span{color:var(--muted);font-family:var(--mono);font-size:12px}
+.tprog{font-family:var(--mono);font-size:12px;color:var(--muted);text-align:right}
+.tprog b{display:block;font:700 24px var(--display);color:var(--accent)}
+.tlist{list-style:none;margin:0;padding:0;display:grid}
+.tlist li{display:flex;align-items:center;gap:12px;padding:10px 6px;border-bottom:1px solid var(--line-soft);border-radius:8px}
+.tlist li:last-child{border-bottom:0}
+.tlist li.empty{color:var(--muted);padding:6px}
+.tlist .tick{width:22px;height:22px;flex:none;accent-color:var(--accent)}
+.tlist .tick-sp{width:22px;flex:none}
+.ttime{font-family:var(--mono);font-size:12px;width:58px;flex:none;line-height:1.3}
+.ttime small{color:var(--muted)}
+.tbar{width:4px;align-self:stretch;border-radius:2px;background:var(--c);flex:none}
+.tmain{display:grid;min-width:0;flex:1}
+.tmain b{font-weight:600}
+.tmain small{color:var(--muted);font-size:12.5px}
+.cramtag{font:700 9px var(--mono);font-style:normal;background:var(--fg);color:var(--surface);border-radius:3px;padding:1px 4px;margin-right:6px;vertical-align:2px}
+.tlist li.now-row{background:color-mix(in srgb,var(--c) 14%,transparent)}
+.tlist li.done .tmain{opacity:.5;text-decoration:line-through}
+.tlist li.past .ttime{color:var(--muted)}
+.tstart{padding:7px 14px;flex:none}
+.tlist .del{border:0;background:none;color:var(--muted);cursor:pointer;font-size:14px;padding:4px 8px}
+.todoadd{display:flex;gap:8px;margin-bottom:6px}
+.todoadd input{flex:1;min-width:0;font:16px var(--body);color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.b{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:manipulation}
+.b.dragging{z-index:10;transform:scale(1.04);box-shadow:0 10px 24px rgba(0,0,0,.28);transition:none;cursor:grabbing;opacity:.96}
+.b.dragging .t{display:block!important;font-weight:600;color:inherit}
 .sheet{position:fixed;inset:0;z-index:20;background:color-mix(in srgb,#000 45%,transparent);display:flex;align-items:flex-end;justify-content:center;padding:16px;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))}
 .sheet form{background:var(--surface);color:var(--fg);border:1px solid var(--line);border-radius:16px;width:100%;max-width:440px;padding:18px;display:grid;gap:12px;box-shadow:0 20px 50px rgba(0,0,0,.3)}
 @media (min-width:640px){.sheet{align-items:center}}
@@ -161,9 +191,22 @@ h1{font-family:var(--display);font-size:clamp(26px,4vw,36px);font-weight:700;let
   </header>
 
   <div class="views" role="tablist" aria-label="Views">
+    <button class="view" id="vToday" role="tab">Today</button>
     <button class="view" id="vTrack" role="tab">Study timer</button>
     <button class="view" id="vPlan" role="tab">Timetable</button>
   </div>
+
+  <section id="today" class="track" hidden>
+    <div class="todayhead" id="todayHead"></div>
+    <div class="panel">
+      <ul id="todayList" class="tlist"></ul>
+    </div>
+    <div class="panel">
+      <h2>My extra to-dos</h2>
+      <form id="todoForm" class="todoadd"><input type="text" id="todoInput" placeholder="Add something for today, e.g. print Chem notes" autocomplete="off"><button class="btn primary" type="submit">Add</button></form>
+      <ul id="todoList" class="tlist small"></ul>
+    </div>
+  </section>
 
   <section id="track" class="track" hidden>
     <div class="now" id="now"></div>
@@ -187,7 +230,7 @@ h1{font-family:var(--display);font-size:clamp(26px,4vw,36px);font-weight:700;let
   <div class="scroller"><div class="grid" id="grid"></div></div>
 
   <div class="legend" id="legend"></div>
-  <p class="notes">Shifts are only rostered to Sun 18 Oct. If you pick one up later, swap it in and drop that day to about 2 hours. School is shown as 8:30 to 3:15. Tap any block to edit or delete it, or tap an empty spot to add one. Your edits save on this device. Dates come from TickTick and the Y11 Sem 2 exam timetable. No classes are shown during the exam fortnight.</p>
+  <p class="notes">Shifts are only rostered to Sun 18 Oct. If you pick one up later, swap it in and drop that day to about 2 hours. School is shown as 8:30 to 3:15. Tap any block to edit or delete it, hold a block to drag it to a new time or day, or tap an empty spot to add one. Your edits save on this device. Dates come from TickTick and the Y11 Sem 2 exam timetable. No classes are shown during the exam fortnight.</p>
   </section>
 </div>
 
@@ -316,6 +359,7 @@ const hh=x=>String(Math.floor(x)).padStart(2,"0")+":"+String(Math.round((x%1)*60
 const STUDY_KEYS=Object.keys(TYPES).filter(k=>TYPES[k].study), OTHER_KEYS=Object.keys(TYPES).filter(k=>!TYPES[k].study);
 const sheet=document.createElement("div");sheet.className="sheet";sheet.hidden=true;document.body.appendChild(sheet);
 grid.addEventListener("click",e=>{
+  if(suppressClick){suppressClick=false;return}
   const b=e.target.closest(".b");
   if(b){openEditor(+b.dataset.d,+b.dataset.k);return}
   const col=e.target.closest(".col");
@@ -367,6 +411,52 @@ function openEditor(d,k,startH){
   function showErr(m){$("edErr").textContent=m;$("edErr").hidden=false}
 }
 function closeEditor(){sheet.hidden=true;sheet.innerHTML=""}
+
+/* ---------- hold a block, then drag it to a new time or day ---------- */
+let press=null,drag=null,suppressClick=false;
+grid.addEventListener("contextmenu",e=>{if(e.target.closest(".b"))e.preventDefault()});
+grid.addEventListener("pointerdown",e=>{
+  const b=e.target.closest(".b");if(!b||e.button>0)return;
+  press={b,x:e.clientX,y:e.clientY,timer:setTimeout(()=>startDrag(e.clientX,e.clientY),350)};
+});
+function startDrag(x,y){
+  if(!press)return;
+  const b=press.b,d=+b.dataset.d,k=+b.dataset.k,blk=WEEKS[CUR].days[d][k];
+  const dur=toH(blk[1])-toH(blk[0]);
+  drag={b,d,k,blk,dur,startY:y,s0:toH(blk[0]),nd:d,ns:toH(blk[0]),cols:[...grid.querySelectorAll(".col")]};
+  b.classList.add("dragging");
+  try{navigator.vibrate&&navigator.vibrate(12)}catch(err){}
+  press=null;
+}
+window.addEventListener("pointermove",e=>{
+  if(press&&!drag){if(Math.hypot(e.clientX-press.x,e.clientY-press.y)>8){clearTimeout(press.timer);press=null}return}
+  if(!drag)return;
+  e.preventDefault();
+  // which day column is the finger over
+  let nd=drag.nd;
+  drag.cols.forEach((c,i)=>{const r=c.getBoundingClientRect();if(e.clientX>=r.left&&e.clientX<r.right)nd=i});
+  // new start time, snapped to 15 minutes
+  let ns=Math.round((drag.s0+(e.clientY-drag.startY)/HOUR)*4)/4;
+  ns=Math.max(START,Math.min(END-drag.dur,ns));
+  if(nd!==drag.nd){drag.cols[nd].appendChild(drag.b);drag.nd=nd}
+  drag.ns=ns;
+  drag.b.style.top=((ns-START)*HOUR+1)+"px";
+  const t=drag.b.querySelector(".t");if(t)t.textContent=fmt(hh(ns))+"–"+fmt(ns+drag.dur>=24?"24:00":hh(ns+drag.dur));
+},{passive:false});
+document.addEventListener("touchmove",e=>{if(drag)e.preventDefault()},{passive:false});
+function endPress(){
+  if(press){clearTimeout(press.timer);press=null}
+  if(!drag)return;
+  const {d,k,blk,dur,nd,ns}=drag,w=WEEKS[CUR];
+  drag.b.classList.remove("dragging");drag=null;suppressClick=true;setTimeout(()=>suppressClick=false,400);
+  if(nd===d&&ns===toH(blk[0])){show(CUR);return}
+  const moved=[hh(ns),ns+dur>=24?"24:00":hh(ns+dur),blk[2],blk[3],blk[4]];
+  w.days[d].splice(k,1);w.days[nd].push(moved);
+  saveDay(w,d);if(nd!==d)saveDay(w,nd);
+  show(CUR);
+}
+window.addEventListener("pointerup",endPress);
+window.addEventListener("pointercancel",endPress);
 sheet.addEventListener("click",e=>{if(e.target===sheet)closeEditor()});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!sheet.hidden)closeEditor()});
 
@@ -456,19 +546,68 @@ function renderTrack(){
 setInterval(()=>{if(!document.getElementById("track").hidden)tick()},1000);
 
 /* ---------- view switch ---------- */
+/* ---------- Today ---------- */
+const DKEY="todayDone.v1";
+let DONE={};try{DONE=JSON.parse(localStorage.getItem(DKEY)||"{}")}catch(e){}
+const saveDone=()=>{try{localStorage.setItem(DKEY,JSON.stringify(DONE))}catch(e){}};
+function todayPlan(){
+  for(let i=0;i<WEEKS.length;i++){for(let d=0;d<7;d++){if(iso(addDays(WEEKS[i].start,d))===todayISO)return{w:WEEKS[i],d}}}
+  return null;
+}
+function renderToday(){
+  const p=todayPlan(),now=new Date(),nowH=now.getHours()+now.getMinutes()/60;
+  const day=DONE[todayISO]||(DONE[todayISO]={done:{},todos:[]});
+  const blocks=p?[...p.w.days[p.d]].sort((a,b)=>toH(a[0])-toH(b[0])):[];
+  const cur=blocks.find(b=>toH(b[0])<=nowH&&nowH<toH(b[1]));
+  const next=blocks.find(b=>toH(b[0])>nowH);
+  const studyB=blocks.filter(b=>TYPES[b[2]].study);
+  const planned=studyB.reduce((a,b)=>a+toH(b[1])-toH(b[0]),0);
+  const doneH=studyB.filter(b=>day.done[b[0]+b[2]]).reduce((a,b)=>a+toH(b[1])-toH(b[0]),0);
+  const lbl=b=>TYPES[b[2]].study?TYPES[b[2]].n+(b[3]!==TYPES[b[2]].n?" · "+b[3]:""):b[3];
+  const due=p&&p.w.due&&p.w.due[p.d];
+  document.getElementById("todayHead").innerHTML=`
+    <div><div class="tdate">${now.toLocaleDateString("en-AU",{weekday:"long",day:"numeric",month:"long"})}</div>
+    ${due?`<div class="tdue">${esc(due)}</div>`:""}
+    <div class="tnow">${cur?`<b>Now:</b> ${esc(lbl(cur))} <span>until ${fmt(cur[1])}</span>`:next?`<b>Next:</b> ${esc(lbl(next))} <span>at ${fmt(next[0])}</span>`:blocks.length?"<b>That's everything for today.</b>":"<b>Nothing planned today.</b>"}</div></div>
+    ${planned?`<div class="tprog"><b>${doneH%1?doneH.toFixed(1):doneH} / ${planned%1?planned.toFixed(1):planned}h</b>study ticked off</div>`:""}`;
+  const list=document.getElementById("todayList");
+  list.innerHTML=blocks.length?blocks.map(b=>{
+    const isStudy=TYPES[b[2]].study,id=b[0]+b[2],isDone=!!day.done[id],isNow=b===cur,past=toH(b[1])<=nowH;
+    const title=isStudy?TYPES[b[2]].n:b[3],detail=isStudy&&b[3]!==TYPES[b[2]].n?b[3]:"";
+    return `<li class="${isNow?"now-row":""}${isDone?" done":""}${past&&!isDone?" past":""}" style="--c:var(${TYPES[b[2]].c})">
+      ${isStudy?`<input type="checkbox" class="tick" data-id="${esc(id)}"${isDone?" checked":""} aria-label="Done">`:`<span class="tick-sp"></span>`}
+      <span class="ttime">${fmt(b[0])}<br><small>${fmt(b[1])}</small></span>
+      <span class="tbar"></span>
+      <span class="tmain"><b>${b[4]?'<em class="cramtag">CRAM</em>':""}${esc(title)}</b>${detail?`<small>${esc(detail)}</small>`:""}</span>
+      ${isStudy&&!isDone?`<button class="btn tstart" data-s="${b[2]}">${st.running&&st.running.s===b[2]?"Running":"Start"}</button>`:""}
+    </li>`}).join(""):`<li class="empty">No blocks planned today. Add some in the Timetable tab.</li>`;
+  list.querySelectorAll(".tick").forEach(c=>c.onchange=()=>{day.done[c.dataset.id]=c.checked;saveDone();renderToday()});
+  list.querySelectorAll(".tstart").forEach(btn=>btn.onclick=()=>{if(!(st.running&&st.running.s===btn.dataset.s))tap(btn.dataset.s);setView("track")});
+  const tl=document.getElementById("todoList");
+  tl.innerHTML=day.todos.length?day.todos.map((t,i)=>`<li class="${t.done?"done":""}"><input type="checkbox" class="tick" data-i="${i}"${t.done?" checked":""} aria-label="Done"><span class="tmain"><b>${esc(t.t)}</b></span><button class="del" data-i="${i}" aria-label="Remove">✕</button></li>`).join(""):`<li class="empty">Nothing extra yet.</li>`;
+  tl.querySelectorAll(".tick").forEach(c=>c.onchange=()=>{day.todos[+c.dataset.i].done=c.checked;saveDone();renderToday()});
+  tl.querySelectorAll(".del").forEach(b=>b.onclick=()=>{day.todos.splice(+b.dataset.i,1);saveDone();renderToday()});
+}
+document.getElementById("todoForm").onsubmit=e=>{
+  e.preventDefault();const inp=document.getElementById("todoInput"),v=inp.value.trim();if(!v)return;
+  const day=DONE[todayISO]||(DONE[todayISO]={done:{},todos:[]});day.todos.push({t:v,done:false});saveDone();inp.value="";renderToday();
+};
+setInterval(()=>{if(!document.getElementById("today").hidden)renderToday()},30000);
+
+/* ---------- view switch ---------- */
+const VIEWS={today:"vToday",track:"vTrack",plan:"vPlan"};
 function setView(v){
-  document.getElementById("track").hidden=v!=="track";
-  document.getElementById("plan").hidden=v!=="plan";
-  document.getElementById("vTrack").setAttribute("aria-selected",v==="track");
-  document.getElementById("vPlan").setAttribute("aria-selected",v==="plan");
+  if(!VIEWS[v])v="today";
+  Object.keys(VIEWS).forEach(k=>{document.getElementById(k).hidden=k!==v;document.getElementById(VIEWS[k]).setAttribute("aria-selected",k===v)});
   try{localStorage.setItem("studyView",v)}catch(e){}
   if(v==="track")renderTrack();
+  if(v==="today")renderToday();
+  if(v==="plan")show(CUR);
 }
-document.getElementById("vTrack").onclick=()=>setView("track");
-document.getElementById("vPlan").onclick=()=>setView("plan");
-let v0="track";try{v0=localStorage.getItem("studyView")||"track"}catch(e){}
+Object.entries(VIEWS).forEach(([k,id])=>document.getElementById(id).onclick=()=>setView(k));
+let v0="today";try{v0=localStorage.getItem("studyView")||"today"}catch(e){}
 setView(v0);
-document.addEventListener("visibilitychange",()=>{if(!document.hidden&&v0)renderTrack()});
+document.addEventListener("visibilitychange",()=>{if(document.hidden)return;if(!document.getElementById("track").hidden)renderTrack();if(!document.getElementById("today").hidden)renderToday()});
 </script>
 
 </body>
