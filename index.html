@@ -125,8 +125,26 @@ h1{font-family:var(--display);font-size:clamp(26px,4vw,36px);font-weight:700;let
 .b.school{border-left-color:transparent;background:repeating-linear-gradient(135deg,var(--school) 0 6px,color-mix(in srgb,var(--school) 60%,var(--surface)) 6px 12px);color:var(--muted)}
 .b.shift{background:var(--shift);color:var(--surface);border-left-color:var(--meth)}
 .b.shift .t{color:inherit;opacity:.75}
-.b.exam{background:var(--exam);color:var(--surface);border-left:3px solid var(--spec);box-shadow:0 0 0 2px color-mix(in srgb,var(--spec) 40%,transparent)}
+/* EXAM: solid ink block, red frame, clock icon */
+.b.exam{background:var(--exam);color:var(--surface);border:2px solid var(--spec)!important;box-shadow:0 0 0 3px color-mix(in srgb,var(--spec) 30%,transparent);padding:5px 7px}
 .b.exam .t{color:inherit;opacity:.75}
+.b.exam .l{font:700 13px var(--display);letter-spacing:.02em}
+.exhead{display:flex;align-items:center;gap:4px;font:700 10px var(--mono);letter-spacing:.1em;color:var(--spec);margin-bottom:2px}
+.exhead svg,.tbh svg,.chip svg{width:12px;height:12px;flex:none}
+/* TEST: white card, heavy ink outline, pencil icon, sits over school */
+.tb{position:absolute;left:5px;right:5px;z-index:3;background:var(--surface);color:var(--fg);border:2px solid var(--fg);border-radius:4px;padding:3px 6px;display:grid;align-content:start;gap:1px;box-shadow:3px 3px 0 var(--fg);overflow:hidden;pointer-events:auto;cursor:default}
+.tbh{display:flex;align-items:center;gap:4px;font:700 10px var(--mono);letter-spacing:.1em}
+.tbl{font-size:11px;font-weight:600;line-height:1.2}
+/* header chips */
+.chipset{display:flex;flex-direction:column;gap:4px;margin-top:6px;align-items:flex-start}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;line-height:1.2;border-radius:5px;padding:2px 6px;max-width:100%}
+.chip b{font:700 9.5px var(--mono);letter-spacing:.08em}
+.chip.exam{background:var(--exam);color:var(--surface);box-shadow:inset 0 0 0 1.5px var(--spec)}
+.chip.exam svg{color:var(--spec)}
+.chip.test{background:var(--surface);color:var(--fg);border:1.5px solid var(--fg);box-shadow:2px 2px 0 var(--fg)}
+.chip.due{color:var(--fg);border:1.5px dashed var(--muted)}
+.chip.note{color:var(--muted);padding-inline:0;font-style:italic}
+.dh .due{display:none}
 .b.cram{background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--c) 70%,var(--surface)) 0 7px,color-mix(in srgb,var(--c) 52%,var(--surface)) 7px 14px);border-left-color:var(--fg)}
 .b.cram .l::before{content:"CRAM";font:700 9px var(--mono);letter-spacing:.06em;background:var(--fg);color:var(--surface);border-radius:3px;padding:0 4px;margin-right:5px}
 .b.cut{background:transparent;border:1px dashed var(--muted);border-left:3px dashed var(--muted);color:var(--muted)}
@@ -297,6 +315,29 @@ WEEKS.forEach((w,i)=>{
   b.onclick=()=>show(i);tabs.appendChild(b);
 });
 
+/* tests, exams, deadlines: split the "due" notes and sort each into a kind */
+const ICON={
+  test:`<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M11.3 1.7l3 3-8.6 8.6-3.6.6.6-3.6z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M9.6 3.4l3 3" stroke="currentColor" stroke-width="1.7"/></svg>`,
+  exam:`<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="9" r="5.6" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M8 9V6M6 1.5h4M8 1.5v2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>`,
+  due:`<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 2h7l3 3v9H3z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M5.5 9l2 2 3.5-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>`
+};
+function dueItems(w,d){
+  const raw=w.due&&w.due[d];if(!raw)return[];
+  return String(raw).split(/\s*·\s*/).filter(Boolean).map(text=>{
+    let kind="note";
+    if(/tomorrow/i.test(text))kind="note";
+    else if(/exam/i.test(text))kind="exam";
+    else if(/\bdue\b/i.test(text))kind="due";
+    else if(/test|validation|lab skills|assessment|task/i.test(text))kind="test";
+    return{text,kind};
+  });
+}
+function dueChips(w,d){
+  const items=dueItems(w,d);if(!items.length)return"";
+  const label={exam:"EXAM",test:"TEST",due:"DUE"};
+  return `<span class="chipset">${items.map(x=>x.kind==="note"?`<span class="chip note">${esc(x.text)}</span>`:`<span class="chip ${x.kind}">${ICON[x.kind]}<b>${label[x.kind]}</b> ${esc(x.text.replace(/\s*(exam|due)\s*/i," ").trim()||x.text)}</span>`).join("")}</span>`;
+}
+
 let CUR=0;
 function show(i){
   CUR=i;
@@ -313,7 +354,7 @@ function show(i){
   let html=`<div class="dh corner"></div>`;
   for(let d=0;d<7;d++){
     const date=addDays(w.start,d),isT=iso(date)===todayISO,has=w.days[d]&&w.days[d].length;
-    const due=w.due&&w.due[d]?`<span class="due">${w.due[d]}</span>`:"";
+    const due=dueChips(w,d);
     html+=`<div class="dh${isT?" is-today":""}"><div class="dn">${DOW[d]}</div><div class="dd">${date.getDate()} ${date.toLocaleString("en-AU",{month:"short"})}${has?"":" · free"}</div>${due}</div>`;
   }
   const H=(END-START)*HOUR;
@@ -327,8 +368,16 @@ function show(i){
       const top=(toH(s)-START)*HOUR,ht=(toH(e)-toH(s))*HOUR-2,ty=TYPES[t];
       const cls=["b",t,cram?"cram":"",ht<36?"short":"",ht<58?"mid":""].join(" ");
       const title=ty.study?ty.n:l, detail=ty.study&&l!==ty.n?l:"";
-      html+=`<button class="${cls}" data-d="${d}" data-k="${k}" style="top:${top+1}px;height:${ht}px;--c:var(${ty.c})" title="${fmt(s)} to ${fmt(e)} · ${esc(title)}${detail?" · "+esc(detail):""}"><span class="l">${esc(title)}</span>${detail?`<span class="d">${esc(detail)}</span>`:""}<span class="t">${fmt(s)}–${fmt(e)}</span></button>`;
+      const ex=t==="exam"?`<span class="exhead">${ICON.exam} EXAM</span>`:"";
+      html+=`<button class="${cls}" data-d="${d}" data-k="${k}" style="top:${top+1}px;height:${ht}px;--c:var(${ty.c})" title="${fmt(s)} to ${fmt(e)} · ${esc(title)}${detail?" · "+esc(detail):""}">${ex}<span class="l">${esc(title)}</span>${detail?`<span class="d">${esc(detail)}</span>`:""}<span class="t">${fmt(s)}–${fmt(e)}</span></button>`;
     });
+    // in-class tests: a marker over the school day
+    const tests=dueItems(w,d).filter(x=>x.kind==="test");
+    if(tests.length){
+      const sch=(w.days[d]||[]).find(b=>b[2]==="school"),s0=sch?toH(sch[0])+0.5:9;
+      tests.forEach((x,j)=>{const top=(s0+j*1.1-START)*HOUR;
+        html+=`<div class="tb" style="top:${top}px;height:${HOUR-4}px" title="In-class test: ${esc(x.text)}"><span class="tbh">${ICON.test} TEST</span><span class="tbl">${esc(x.text)}</span></div>`});
+    }
     html+=`</div>`;
   }
   grid.innerHTML=html;
@@ -338,7 +387,7 @@ function show(i){
 document.getElementById("legend").innerHTML=
  ["eng","hbio","spec","meth","chem","rel"].map(k=>`<span><i style="background:color-mix(in srgb,var(${TYPES[k].c}) var(--mix),var(--surface));border-left:3px solid var(${TYPES[k].c})"></i>${TYPES[k].n}</span>`).join("")+
  `<span><i style="background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--spec) 70%,var(--surface)) 0 5px,color-mix(in srgb,var(--spec) 50%,var(--surface)) 5px 10px)"></i>Cram</span>
-  <span><i style="background:var(--exam)"></i>Exam</span><span><i style="background:var(--shift)"></i>Shift</span>
+  <span class="chip exam">${ICON.exam}<b>EXAM</b></span><span class="chip test">${ICON.test}<b>TEST</b> in class</span><span class="chip due">${ICON.due}<b>DUE</b></span><span><i style="background:var(--shift)"></i>Shift</span>
   <span><i style="background:repeating-linear-gradient(135deg,var(--school) 0 4px,transparent 4px 8px)"></i>School</span>
   <span><i style="border:1px dashed var(--muted)"></i>Suggested cut</span>`;
 
@@ -360,6 +409,7 @@ const STUDY_KEYS=Object.keys(TYPES).filter(k=>TYPES[k].study), OTHER_KEYS=Object
 const sheet=document.createElement("div");sheet.className="sheet";sheet.hidden=true;document.body.appendChild(sheet);
 grid.addEventListener("click",e=>{
   if(suppressClick){suppressClick=false;return}
+  if(e.target.closest(".tb"))return;
   const b=e.target.closest(".b");
   if(b){openEditor(+b.dataset.d,+b.dataset.k);return}
   const col=e.target.closest(".col");
@@ -567,7 +617,7 @@ function renderToday(){
   const due=p&&p.w.due&&p.w.due[p.d];
   document.getElementById("todayHead").innerHTML=`
     <div><div class="tdate">${now.toLocaleDateString("en-AU",{weekday:"long",day:"numeric",month:"long"})}</div>
-    ${due?`<div class="tdue">${esc(due)}</div>`:""}
+    ${p?`<div class="tdue">${dueChips(p.w,p.d)}</div>`:""}
     <div class="tnow">${cur?`<b>Now:</b> ${esc(lbl(cur))} <span>until ${fmt(cur[1])}</span>`:next?`<b>Next:</b> ${esc(lbl(next))} <span>at ${fmt(next[0])}</span>`:blocks.length?"<b>That's everything for today.</b>":"<b>Nothing planned today.</b>"}</div></div>
     ${planned?`<div class="tprog"><b>${doneH%1?doneH.toFixed(1):doneH} / ${planned%1?planned.toFixed(1):planned}h</b>study ticked off</div>`:""}`;
   const list=document.getElementById("todayList");
