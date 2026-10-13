@@ -20,7 +20,7 @@ const SCHEDULE = [
 {
   name: "Week 1", start: "2026-10-12",
   focus: "Spec leads because of Thursday's Inv 2 validation, the Revision Assignment and Test 4 next week. Every other subject still gets a short block so nothing goes cold.",
-  due: { Tue: "Term 4 starts", Thu: "Spec Inv 2 validation", Fri: "Stella's Halloween party (maybe)" },
+  due: { Tue: "Term 4 starts", Thu: "Spec Inv 2 validation" },
   Mon: [
     "9:00-10:30 spec Inv 2: complex numbers",
     "11:00-11:45 meth Test 6: Ch 6 review",
@@ -32,13 +32,13 @@ const SCHEDULE = [
   Tue: [
     "school",
     "15:30-16:30 spec Inv 2: finish + check working",
-    "16:45-17:45 tutor Leo tutoring",
-    "18:50-19:50 sport Spring netball"
+    "16:45-17:45 tutor Leo tutoring"
   ],
   Wed: [
     "school",
     "16:00-17:00 spec cram Inv 2: final run-through",
-    "19:00-19:45 eng 7B: reread the task brief"
+    "18:50-19:50 sport Spring netball",
+    "20:00-20:45 eng 7B: reread the task brief"
   ],
   Thu: [
     "school",
@@ -75,13 +75,13 @@ const SCHEDULE = [
   Tue: [
     "school",
     "15:30-16:30 meth Test 6: Ch 6 questions",
-    "16:45-17:45 tutor Leo tutoring",
-    "18:50-19:50 sport Spring netball"
+    "16:45-17:45 tutor Leo tutoring"
   ],
   Wed: [
     "school",
     "16:00-17:00 eng 7B: keep drafting",
-    "19:00-19:45 hbio Lab skills: methods + safety"
+    "18:50-19:50 sport Spring netball",
+    "20:00-20:45 hbio Lab skills: methods + safety"
   ],
   Thu: [
     "school",
@@ -109,7 +109,7 @@ const SCHEDULE = [
 {
   name: "Week 3", start: "2026-10-26",
   focus: "Thursday has Methods Test 6, Spec Test 4 and the Chem validation, then Human Bio lab skills on Friday, so those four lead. English gets a short exam-prep block, and Methods Rev Test 2 prep starts on the weekend.",
-  due: { Mon: "English 7B oral + transformation", Thu: "Methods Test 6 · Spec Test 4 · Chem Inv 2 validation", Fri: "HBio Task 9 lab skills", Sat: "Halloween party" },
+  due: { Mon: "English 7B oral + transformation", Thu: "Methods Test 6 · Spec Test 4 · Chem Inv 2 validation", Fri: "HBio Task 9 lab skills · Stella's Halloween party (maybe)", Sat: "Halloween party" },
   Mon: [
     "school",
     "15:45-16:45 meth Test 6: Ch 8",
@@ -120,14 +120,14 @@ const SCHEDULE = [
     "school",
     "15:30-16:30 spec Test 4: timed past test",
     "16:45-17:45 tutor Leo tutoring",
-    "18:50-19:50 sport Spring netball",
     "20:00-20:45 meth Test 6: timed past test"
   ],
   Wed: [
     "school",
     "15:45-16:45 chem cram Validation: final check",
     "17:00-17:45 meth Test 6: weak spots",
-    "19:00-19:45 spec Test 4: weak spots",
+    "18:00-18:45 spec Test 4: weak spots",
+    "18:50-19:50 sport Spring netball",
     "20:00-20:30 meth cram Test 6 formulas",
     "20:30-21:00 spec cram Test 4 formulas"
   ],
@@ -171,13 +171,13 @@ const SCHEDULE = [
     "school",
     "15:30-16:30 eng Timed essay",
     "16:45-17:45 tutor Leo tutoring",
-    "18:50-19:50 cut Netball (skip if you can)",
     "20:00-20:45 chem Exam: stoichiometry"
   ],
   Wed: [
     "school",
     "15:45-17:00 hbio Exam: unit review",
-    "19:00-20:00 spec Exam: past paper section"
+    "18:50-19:50 cut Netball (skip if you can)",
+    "20:00-21:00 spec Exam: past paper section"
   ],
   Thu: [
     "school",
@@ -219,14 +219,14 @@ const SCHEDULE = [
     "11:00-12:30 spec Past questions",
     "14:00-15:30 hbio Diagrams + definitions",
     "15:45-16:30 meth Practice questions",
-    "16:45-17:45 cut Leo tutoring (pause)",
-    "18:50-19:50 cut Netball"
+    "16:45-17:45 cut Leo tutoring (pause)"
   ],
   Wed: [
     "8:45-11:45 hbio Timed Human Bio paper",
     "13:00-15:00 spec Past paper sections",
     "15:30-16:15 chem Practice questions",
-    "19:00-20:00 hbio cram Definitions, diagrams, key terms"
+    "18:50-19:50 cut Netball",
+    "20:00-21:00 hbio cram Definitions, diagrams, key terms"
   ],
   Thu: [
     "8:00-9:30 hbio cram Flashcards + key diagrams",
@@ -265,13 +265,13 @@ const SCHEDULE = [
     "9:00-11:30 meth Timed Methods paper",
     "13:00-15:30 meth Review + weak areas",
     "16:45-17:45 cut Leo tutoring (pause)",
-    "18:50-19:50 cut Netball",
     "20:00-21:00 meth cram Rules + formula sheet"
   ],
   Wed: [
     "7:00-8:00 meth cram Formula sheet",
     "8:45-11:15 exam METHODS EXAM",
-    "12:00-14:00 event Exams done"
+    "12:00-14:00 event Exams done",
+    "18:50-19:50 cut Netball"
   ],
 }
 ];
