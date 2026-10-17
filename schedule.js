@@ -66,7 +66,7 @@ const SCHEDULE = [
 {
   name: "Week 2", start: "2026-10-19",
   focus: "English 7B is due Monday 26, so it leads the week. Spec Test 4 prep starts now since it's on Thursday 29 with Methods Test 6 and the Chem validation, and Human Bio gets steady lab skills blocks.",
-  due: { Tue: "Spec Revision Assignment due" },
+  due: { Tue: "Spec Revision Assignment due", Sat: "Whitey's birthday party" },
   Mon: [
     "school",
     "15:45-16:45 spec Revision Assignment: finalise",
