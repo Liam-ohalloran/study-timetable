@@ -66,7 +66,7 @@ const SCHEDULE = [
 {
   name: "Week 2", start: "2026-10-19",
   focus: "English 7B is due Monday 26, so it leads the week. Spec Test 4 prep starts now since it's on Thursday 29 with Methods Test 6 and the Chem validation, and Human Bio gets steady lab skills blocks.",
-  due: { Tue: "Spec Revision Assignment due", Sat: "Whitey's birthday party" },
+  due: { Tue: "Spec Revision Assignment due", Sat: "Whitey's birthday party · Driving hazard perception test" },
   Mon: [
     "school",
     "15:45-16:45 spec Revision Assignment: finalise",
@@ -109,7 +109,7 @@ const SCHEDULE = [
 {
   name: "Week 3", start: "2026-10-26",
   focus: "Thursday has Methods Test 6, Spec Test 4 and the Chem validation, then Human Bio lab skills on Friday, so those four lead. English gets a short exam-prep block, and Methods Rev Test 2 prep starts on the weekend.",
-  due: { Mon: "English 7B oral + transformation", Thu: "Methods Test 6 · Spec Test 4 · Chem Inv 2 validation", Fri: "HBio Task 9 lab skills · Stella's Halloween party (maybe)", Sat: "Halloween party" },
+  due: { Mon: "English 7B oral + transformation", Thu: "Methods Test 6 · Spec Test 4 · Chem Inv 2 validation", Fri: "HBio Task 9 lab skills · Stella's Halloween party (maybe)", Sat: "Halloween party · Halloween sleepover" },
   Mon: [
     "school",
     "15:45-16:45 meth Test 6: Ch 8",
