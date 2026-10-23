@@ -92,7 +92,8 @@ const SCHEDULE = [
   ],
   Fri: [
     "school",
-    "15:45-17:15 eng 7B: finish draft, plan the oral"
+    "15:30-16:00 eng 7B: finish draft, plan the oral",
+    "16:00-22:00 shift FRIDAY PB/PL 4-10"
   ],
   Sat: [
     "9:00-10:30 eng 7B polish + oral rehearsal",
@@ -101,10 +102,11 @@ const SCHEDULE = [
     "17:00-24:00 event Whitey's birthday party"
   ],
   Sun: [
-    "10:00-10:45 eng Oral run-through",
-    "11:00-12:00 meth Test 6: Ch 7",
-    "13:00-13:45 hbio Lab skills: practise techniques",
-    "14:00-14:45 spec Test 4: weak spots"
+    "6:00-14:00 shift SUNDAY PL 6-2",
+    "14:00-14:45 spec Test 4: weak spots",
+    "15:00-15:45 eng Oral run-through",
+    "16:00-17:00 meth Test 6: Ch 7",
+    "17:15-18:00 hbio Lab skills: practise techniques"
   ],
 },
 
@@ -114,9 +116,8 @@ const SCHEDULE = [
   due: { Mon: "English 7B oral + transformation", Thu: "Methods Test 6 · Spec Test 4 · Chem Inv 2 validation", Fri: "HBio Task 9 lab skills · Stella's Halloween party (maybe)", Sat: "Halloween party · Halloween sleepover" },
   Mon: [
     "school",
-    "15:45-16:45 meth Test 6: Ch 8",
-    "17:00-17:45 spec Test 4: practice questions",
-    "19:00-20:00 chem Validation prep: method + calcs"
+    "15:30-16:00 meth Test 6: Ch 8",
+    "16:00-22:00 shift MONDAY PL 4-10"
   ],
   Tue: [
     "school",
