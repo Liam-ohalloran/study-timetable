@@ -122,6 +122,7 @@ const SCHEDULE = [
   Tue: [
     "school",
     "15:30-16:30 spec Test 4: timed past test",
+    "16:30-17:00 event Video interview: McDonald's Innaloo",
     "16:45-17:45 tutor Leo tutoring",
     "20:00-20:45 meth Test 6: timed past test"
   ],
