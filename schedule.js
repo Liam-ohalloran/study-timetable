@@ -122,14 +122,14 @@ const SCHEDULE = [
   Tue: [
     "school",
     "15:30-16:30 spec Test 4: timed past test",
-    "16:30-17:00 event Video interview: McDonald's Innaloo",
     "16:45-17:45 tutor Leo tutoring",
     "20:00-20:45 meth Test 6: timed past test"
   ],
   Wed: [
     "school",
-    "15:45-16:45 chem cram Validation: final check",
-    "17:00-17:45 meth Test 6: weak spots",
+    "15:30-16:30 chem cram Validation: final check",
+    "16:30-17:30 event Video interview: McDonald's Innaloo",
+    "17:30-18:00 meth Test 6: weak spots",
     "18:00-18:45 spec Test 4: weak spots",
     "18:50-19:50 sport Spring netball",
     "20:00-20:30 meth cram Test 6 formulas",
